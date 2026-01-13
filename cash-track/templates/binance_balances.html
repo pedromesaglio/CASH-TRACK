@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Balances de Binance - Cash Track{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="header-with-actions">
+        <h2>💰 Balances de Binance en Tiempo Real</h2>
+        <a href="{{ url_for('binance_config') }}" class="btn btn-secondary">⚙️ Configuración</a>
+    </div>
+
+    <div class="info-card">
+        <p>📊 Tus balances sincronizados directamente desde tu cuenta de Binance</p>
+        <p><strong>Tasa de cambio:</strong> 1 USD = ${{ "%.2f"|format(exchange_rate) }} ARS</p>
+    </div>
+
+    {% if balances %}
+    <div class="table-card">
+        <h3>🔐 Balance de Tu Wallet</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Activo</th>
+                    <th>Cantidad Disponible</th>
+                    <th>Cantidad Bloqueada</th>
+                    <th>Total</th>
+                    <th>Precio USD</th>
+                    <th>Precio ARS</th>
+                    <th>Valor Total USD</th>
+                    <th>Valor Total ARS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for balance in balances %}
+                <tr>
+                    <td><strong>{{ balance.asset }}</strong></td>
+                    <td>{{ "%.8f"|format(balance.free) }}</td>
+                    <td>{{ "%.8f"|format(balance.locked) }}</td>
+                    <td><strong>{{ "%.8f"|format(balance.total) }}</strong></td>
+                    <td>${{ "%.2f"|format(balance.price_usd) }}</td>
+                    <td>${{ "%.2f"|format(balance.price_ars) }}</td>
+                    <td><strong>${{ "%.2f"|format(balance.total_usd) }}</strong></td>
+                    <td><strong>${{ balance.total_ars|format_number }} ARS</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="6"><strong>TOTAL EN USD</strong></td>
+                    <td><strong>${{ "%.2f"|format(balances|sum(attribute='total_usd')) }}</strong></td>
+                    <td></td>
+                </tr>
+                <tr class="total-row">
+                    <td colspan="6"><strong>TOTAL EN ARS</strong></td>
+                    <td></td>
+                    <td><strong>${{ balances|sum(attribute='total_ars')|format_number }} ARS</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="action-card">
+        <h3>📥 Importar a Inversiones</h3>
+        <p>¿Querés sincronizar estos balances con tu portafolio de inversiones?</p>
+        <form method="POST" action="{{ url_for('sync_binance_to_investments') }}">
+            <button type="submit" class="btn btn-success btn-large">
+                🔄 Sincronizar con Inversiones
+            </button>
+        </form>
+        <small>Esto creará o actualizará tus inversiones de Binance con los balances actuales</small>
+    </div>
+
+    {% else %}
+    <div class="no-data-card">
+        <h3>📭 Sin Balances</h3>
+        <p>No se encontraron balances en tu cuenta de Binance o aún no has depositado fondos.</p>
+    </div>
+    {% endif %}
+
+    <div class="button-group">
+        <a href="{{ url_for('investments') }}" class="btn btn-primary">← Volver a Inversiones</a>
+        <a href="{{ url_for('binance_balances') }}" class="btn btn-info">🔄 Actualizar</a>
+    </div>
+</div>
+
+<style>
+.header-with-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.info-card {
+    background: #e7f3ff;
+    border-left: 4px solid #2196F3;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.info-card p {
+    margin: 5px 0;
+}
+
+.action-card {
+    background: #f1f8e9;
+    border-left: 4px solid #8BC34A;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 5px;
+}
+
+.action-card h3 {
+    margin-top: 0;
+    color: #558B2F;
+}
+
+.action-card form {
+    margin-top: 15px;
+}
+
+.action-card small {
+    display: block;
+    margin-top: 10px;
+    color: #666;
+}
+
+.no-data-card {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.no-data-card h3 {
+    margin-top: 0;
+    color: #856404;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.data-table th {
+    background: #2196F3;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.data-table tbody tr:hover {
+    background: #f5f5f5;
+}
+
+.data-table tfoot tr.total-row {
+    background: #e3f2fd;
+    font-weight: bold;
+    border-top: 2px solid #2196F3;
+}
+
+.data-table tfoot td {
+    padding: 12px;
+    font-size: 15px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: center;
+}
+</style>
+{% endblock %}

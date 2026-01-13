@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cash Track{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">Cash Track</h1>
+            {% if session.user_id %}
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('expenses') }}">Gastos</a></li>
+                <li><a href="{{ url_for('income') }}">Ingresos</a></li>
+                <li><a href="{{ url_for('investments') }}">Inversiones</a></li>
+                {% if session.role == 'admin' %}
+                <li><a href="{{ url_for('admin_users') }}" class="admin-link">👑 Admin</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('logout') }}">Cerrar Sesión ({{ session.username }})</a></li>
+            </ul>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    {% if session.user_id %}
+    <!-- AI Assistant Chat Button -->
+    <button class="ai-chat-button" onclick="toggleAIChat()" title="Asistente Financiero IA">
+        🤖
+    </button>
+
+    <!-- AI Chat Window -->
+    <div id="aiChatWindow" class="ai-chat-window">
+        <div class="ai-chat-header">
+            <div>
+                <h3>🤖 Asistente Financiero IA</h3>
+                <p class="ai-status">En línea</p>
+            </div>
+            <button onclick="toggleAIChat()" class="ai-close-btn">&times;</button>
+        </div>
+
+        <!-- AI Analysis Section -->
+        <div class="ai-analysis-section">
+            <button onclick="getAIAnalysis()" class="btn-ai-analyze" id="analyzeBtn">
+                📊 Analizar mis Finanzas
+            </button>
+            <button onclick="getPredictions()" class="btn-ai-predict" id="predictBtn">
+                🔮 Predicciones y Alertas
+            </button>
+            <button onclick="getMonthlySummary()" class="btn-ai-summary" id="summaryBtn">
+                📝 Resumen Mensual IA
+            </button>
+        </div>
+
+        <div class="ai-chat-messages" id="aiMessages">
+            <div class="ai-message ai-bot-message">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-bubble">
+                    ¡Hola! Soy tu asistente financiero personal con IA. Puedo ayudarte a:
+                    <ul>
+                        <li>Analizar tus gastos e ingresos</li>
+                        <li>Darte consejos financieros personalizados</li>
+                        <li>Responder preguntas sobre tu dinero</li>
+                        <li>Identificar áreas de ahorro</li>
+                    </ul>
+                    ¿En qué puedo ayudarte hoy?
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-chat-input">
+            <input type="text" id="aiInput" placeholder="Pregunta algo sobre tus finanzas..." onkeypress="handleAIEnter(event)">
+            <button onclick="sendAIMessage()">📤</button>
+        </div>
+    </div>
+
+    <script>
+        let chatOpen = false;
+
+        function toggleAIChat() {
+            chatOpen = !chatOpen;
+            const chatWindow = document.getElementById('aiChatWindow');
+            const chatButton = document.querySelector('.ai-chat-button');
+
+            if (chatOpen) {
+                chatWindow.style.display = 'flex';
+                chatButton.style.transform = 'scale(0)';
+            } else {
+                chatWindow.style.display = 'none';
+                chatButton.style.transform = 'scale(1)';
+            }
+        }
+
+        function handleAIEnter(event) {
+            if (event.key === 'Enter') {
+                sendAIMessage();
+            }
+        }
+
+        async function sendAIMessage() {
+            const input = document.getElementById('aiInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            const typingId = addTypingIndicator();
+
+            try {
+                const response = await fetch('/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+
+                if (data.success) {
+                    addMessage(data.response, 'bot');
+                } else {
+                    addMessage('Lo siento, hubo un error. Por favor intenta de nuevo.', 'bot');
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addMessage('Error de conexión. Asegúrate de que Ollama esté corriendo.', 'bot');
+            }
+        }
+
+        async function getAIAnalysis() {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '⏳ Analizando...';
+
+            const typingId = addTypingIndicator();
+
+            try {
+                const response = await fetch('/ai/analyze');
+                const data = await response.json();
+
+                removeTypingIndicator(typingId);
+
+                if (data.success) {
+                    addMessage(data.analysis, 'bot');
+                } else {
+                    addMessage('Error al generar análisis. Intenta nuevamente.', 'bot');
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addMessage('Error de conexión. Asegúrate de que Ollama esté corriendo.', 'bot');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '📊 Analizar mis Finanzas';
+            }
+        }
+
+        async function getPredictions() {
+            const predictBtn = document.getElementById('predictBtn');
+            predictBtn.disabled = true;
+            predictBtn.textContent = '⏳ Prediciendo...';
+
+            const typingId = addTypingIndicator();
+
+            try {
+                const response = await fetch('/ai/predict-expenses');
+                const data = await response.json();
+
+                removeTypingIndicator(typingId);
+
+                if (data.success) {
+                    addMessage(data.prediction, 'bot');
+                } else {
+                    addMessage('Error al generar predicciones. Intenta nuevamente.', 'bot');
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addMessage('Error de conexión. Asegúrate de que Ollama esté corriendo.', 'bot');
+            } finally {
+                predictBtn.disabled = false;
+                predictBtn.textContent = '🔮 Predicciones y Alertas';
+            }
+        }
+
+        async function getMonthlySummary() {
+            const summaryBtn = document.getElementById('summaryBtn');
+            summaryBtn.disabled = true;
+            summaryBtn.textContent = '⏳ Generando...';
+
+            const typingId = addTypingIndicator();
+
+            try {
+                const response = await fetch('/ai/monthly-summary');
+                const data = await response.json();
+
+                removeTypingIndicator(typingId);
+
+                if (data.success) {
+                    const header = `📅 Resumen de ${data.data.month} ${data.data.year}\n\n`;
+                    addMessage(header + data.summary, 'bot');
+                } else {
+                    addMessage('Error al generar resumen. Intenta nuevamente.', 'bot');
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addMessage('Error de conexión. Asegúrate de que Ollama esté corriendo.', 'bot');
+            } finally {
+                summaryBtn.disabled = false;
+                summaryBtn.textContent = '📝 Resumen Mensual IA';
+            }
+        }
+
+        function addMessage(text, type) {
+            const messagesContainer = document.getElementById('aiMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ai-${type}-message`;
+
+            if (type === 'bot') {
+                messageDiv.innerHTML = `
+                    <div class="ai-avatar">🤖</div>
+                    <div class="ai-bubble">${text.replace(/\n/g, '<br>')}</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="ai-bubble">${text}</div>
+                    <div class="ai-avatar">👤</div>
+                `;
+            }
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const messagesContainer = document.getElementById('aiMessages');
+            const typingDiv = document.createElement('div');
+            const id = 'typing-' + Date.now();
+            typingDiv.id = id;
+            typingDiv.className = 'ai-message ai-bot-message';
+            typingDiv.innerHTML = `
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-bubble ai-typing">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const typingDiv = document.getElementById(id);
+            if (typingDiv) {
+                typingDiv.remove();
+            }
+        }
+    </script>
+    {% endif %}
+</body>
+</html>

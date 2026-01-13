@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Configuración Binance - Cash Track{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h2>⚙️ Configuración de Binance API</h2>
+
+    <div class="info-card">
+        <h3>ℹ️ Cómo obtener tus API Keys de Binance</h3>
+        <p><strong>Opción 1: Desde el sitio web (recomendado)</strong></p>
+        <ol>
+            <li>Inicia sesión en <a href="https://www.binance.com" target="_blank">Binance.com</a></li>
+            <li>En la esquina superior derecha, pasa el cursor sobre tu <strong>icono de perfil</strong></li>
+            <li>En el menú que aparece, busca y haz clic en <strong>"API Management"</strong></li>
+            <li>Si no ves "API Management", ve directamente a: <a href="https://www.binance.com/en/my/settings/api-management" target="_blank">Configuración de API</a></li>
+            <li>Haz clic en <strong>"Create API"</strong> y selecciona <strong>"System generated"</strong></li>
+            <li>Completa la verificación de seguridad (2FA, email, etc.)</li>
+            <li>Ingresa un nombre para tu API (ejemplo: "Cash Track")</li>
+            <li><strong>MUY IMPORTANTE:</strong> En los permisos, marca SOLO:
+                <ul>
+                    <li>✅ <strong>"Enable Reading"</strong> (Habilitar lectura)</li>
+                    <li>❌ NO marques "Enable Spot & Margin Trading"</li>
+                    <li>❌ NO marques "Enable Withdrawals"</li>
+                    <li>❌ NO marques "Enable Futures"</li>
+                </ul>
+            </li>
+            <li>Copia tu <strong>API Key</strong> y <strong>Secret Key</strong> (guárdalos en un lugar seguro)</li>
+        </ol>
+
+        <p><strong>Opción 2: Desde la app móvil</strong></p>
+        <ol>
+            <li>Abre la app de Binance</li>
+            <li>Toca tu icono de perfil (abajo a la derecha)</li>
+            <li>Ve a <strong>Configuración → API Management</strong></li>
+            <li>Sigue los pasos 5-9 de la opción anterior</li>
+        </ol>
+
+        <p class="warning-text">⚠️ <strong>Seguridad:</strong> Nunca compartas tus API Keys. Solo se usarán para leer balances y precios, NO para realizar transacciones, trading o retiros.</p>
+
+        <p class="help-text">💡 <strong>Nota:</strong> Si no encuentras "API Management" en el menú de tu perfil, es posible que necesites acceder desde el navegador web de escritorio o usar el link directo proporcionado arriba.</p>
+    </div>
+
+    {% if has_credentials %}
+    <div class="success-card">
+        <h3>✅ Credenciales Configuradas</h3>
+        <p>Ya tienes tus credenciales de Binance configuradas. Puedes actualizarlas o eliminarlas.</p>
+        <p><strong>Testnet:</strong> {{ 'Sí' if is_testnet else 'No' }}</p>
+
+        <div class="button-group">
+            <button onclick="toggleUpdateForm()" class="btn btn-warning">🔄 Actualizar Credenciales</button>
+            <form method="POST" action="{{ url_for('delete_binance_credentials') }}" style="display: inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de eliminar tus credenciales de Binance?')">
+                    🗑️ Eliminar Credenciales
+                </button>
+            </form>
+            <a href="{{ url_for('test_binance_connection') }}" class="btn btn-info">🔍 Probar Conexión</a>
+        </div>
+    </div>
+
+    <div id="update-form" style="display: none;">
+    {% else %}
+    <div class="form-card">
+    {% endif %}
+        <h3>🔑 Configurar API Keys</h3>
+        <form method="POST" action="{{ url_for('save_binance_credentials') }}">
+            <div class="form-group">
+                <label for="api_key">🔐 API Key</label>
+                <input type="text" id="api_key" name="api_key" required
+                       placeholder="Tu API Key de Binance" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="api_secret">🔒 API Secret</label>
+                <input type="password" id="api_secret" name="api_secret" required
+                       placeholder="Tu API Secret de Binance" class="form-control">
+                <small>Tu API Secret estará encriptado en la base de datos</small>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_testnet" value="1">
+                    <span>🧪 Usar Binance Testnet (para pruebas)</span>
+                </label>
+                <small>Marca esta opción si estás usando credenciales de Binance Testnet</small>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary btn-large">💾 Guardar Credenciales</button>
+                {% if has_credentials %}
+                <button type="button" onclick="toggleUpdateForm()" class="btn btn-secondary">❌ Cancelar</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="info-card">
+        <h3>🎯 ¿Qué puedes hacer con esta integración?</h3>
+        <ul>
+            <li>📊 Ver tus balances reales de Binance en tiempo real</li>
+            <li>💰 Obtener precios actualizados de criptomonedas automáticamente</li>
+            <li>📈 Sincronizar tus inversiones con los valores actuales del mercado</li>
+            <li>🔄 Actualizar todos tus activos con un solo clic</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+function toggleUpdateForm() {
+    const form = document.getElementById('update-form');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+
+<style>
+.info-card {
+    background: #e7f3ff;
+    border-left: 4px solid #2196F3;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.info-card h3 {
+    margin-top: 0;
+    color: #1976D2;
+}
+
+.info-card ol {
+    margin-left: 20px;
+}
+
+.info-card li {
+    margin-bottom: 10px;
+}
+
+.success-card {
+    background: #e8f5e9;
+    border-left: 4px solid #4CAF50;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.success-card h3 {
+    margin-top: 0;
+    color: #388E3C;
+}
+
+.warning-text {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 3px;
+}
+
+.help-text {
+    background: #e8f4fd;
+    border-left: 4px solid #2196F3;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.info-card ul {
+    margin-left: 20px;
+    margin-top: 5px;
+}
+
+.info-card ul li {
+    margin-bottom: 5px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 12px;
+}
+</style>
+{% endblock %}

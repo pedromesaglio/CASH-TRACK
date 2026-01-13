@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Cash Track{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="header-section">
+        <h2>Dashboard</h2>
+        <div class="filter-section">
+            <form method="GET" action="{{ url_for('index') }}" class="filter-form">
+                <select name="month" id="month">
+                    {% for m in range(1, 13) %}
+                    <option value="{{ m }}" {% if m == month %}selected{% endif %}>
+                        {{ ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][m-1] }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <select name="year" id="year">
+                    {% for y in range(current_year - 5, current_year + 2) %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary">Filtrar</button>
+                <a href="{{ url_for('export_csv', year=year, month=month) }}" class="btn btn-success">Exportar CSV</a>
+            </form>
+        </div>
+    </div>
+
+    <div class="summary-cards">
+        <div class="card card-income">
+            <h3>Total Ingresos</h3>
+            <p class="amount">${{ total_income|format_number }}</p>
+        </div>
+        <div class="card card-expense">
+            <h3>Total Gastos</h3>
+            <p class="amount">${{ total_expenses|format_number }}</p>
+        </div>
+        <div class="card card-balance {% if balance >= 0 %}positive{% else %}negative{% endif %}">
+            <h3>Balance</h3>
+            <p class="amount">${{ balance|format_number }}</p>
+        </div>
+        <div class="card card-investment">
+            <h3>💰 Inversiones</h3>
+            <div class="investment-summary-mini">
+                <div class="inv-detail">
+                    <span class="inv-label">Invertido:</span>
+                    <span class="inv-value">${{ total_invested|format_number }}</span>
+                </div>
+                <div class="inv-detail">
+                    <span class="inv-label">Valor Actual:</span>
+                    <span class="inv-value">${{ total_current|format_number }}</span>
+                </div>
+                <div class="inv-detail">
+                    <span class="inv-label">Ganancia:</span>
+                    <span class="inv-value {% if investment_profit >= 0 %}profit-positive{% else %}profit-negative{% endif %}">
+                        {% if investment_profit >= 0 %}+{% endif %}${{ investment_profit|format_number }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="chart-section">
+            <h3>Gastos por Categoría</h3>
+            {% if expenses_by_category %}
+            <canvas id="categoryChart"></canvas>
+            <script>
+                const ctx = document.getElementById('categoryChart').getContext('2d');
+                const categoryChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [
+                            {% for item in expenses_by_category %}
+                            '{{ item.category }}'{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        ],
+                        datasets: [{
+                            data: [
+                                {% for item in expenses_by_category %}
+                                {{ item.total }}{% if not loop.last %},{% endif %}
+                                {% endfor %}
+                            ],
+                            backgroundColor: [
+                                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            </script>
+            {% else %}
+            <p class="no-data">No hay gastos registrados para este período</p>
+            {% endif %}
+        </div>
+
+        <div class="table-section">
+            <h3>💰 Detalle por Categoría</h3>
+            {% if expenses_by_category %}
+            <div class="category-list">
+                {% for item in expenses_by_category %}
+                <div class="category-item">
+                    <div class="category-info">
+                        <span class="category-icon">
+                            {% if item.category == 'Alimentación' %}🍽️
+                            {% elif item.category == 'Transporte' %}🚗
+                            {% elif item.category == 'Salud' %}⚕️
+                            {% elif item.category == 'Entretenimiento' %}🎉
+                            {% elif item.category == 'Servicios' %}🏠
+                            {% elif item.category == 'Educación' %}📚
+                            {% elif item.category == 'Ropa' %}👕
+                            {% else %}📦
+                            {% endif %}
+                        </span>
+                        <div class="category-details">
+                            <span class="category-name">{{ item.category }}</span>
+                            <div class="category-bar">
+                                <div class="category-bar-fill" style="width: {{ (item.total / total_expenses * 100)|round(1) }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="category-amount">${{ "{:,.0f}".format(item.total) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-data">No hay datos disponibles</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="recent-section">
+        <div class="recent-box">
+            <h3>💸 Últimos Gastos</h3>
+            {% if recent_expenses %}
+            <div class="transaction-list">
+                {% for expense in recent_expenses %}
+                <div class="transaction-item expense-item">
+                    <div class="transaction-icon">
+                        {% if expense.category == 'Alimentación' %}🍽️
+                        {% elif expense.category == 'Transporte' %}🚗
+                        {% elif expense.category == 'Salud' %}⚕️
+                        {% elif expense.category == 'Entretenimiento' %}🎉
+                        {% elif expense.category == 'Servicios' %}🏠
+                        {% elif expense.category == 'Educación' %}📚
+                        {% elif expense.category == 'Ropa' %}👕
+                        {% else %}📦
+                        {% endif %}
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-header">
+                            <span class="transaction-description">{{ expense.description }}</span>
+                            <span class="transaction-amount expense-amount">-${{ "{:,.0f}".format(expense.amount) }}</span>
+                        </div>
+                        <div class="transaction-meta">
+                            <span class="transaction-category">{{ expense.category }}</span>
+                            <span class="transaction-separator">•</span>
+                            <span class="transaction-date">{{ expense.date }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-data">No hay gastos recientes</p>
+            {% endif %}
+        </div>
+
+        <div class="recent-box">
+            <h3>💵 Últimos Ingresos</h3>
+            {% if recent_income %}
+            <div class="transaction-list">
+                {% for inc in recent_income %}
+                <div class="transaction-item income-item">
+                    <div class="transaction-icon income-icon">💰</div>
+                    <div class="transaction-details">
+                        <div class="transaction-header">
+                            <span class="transaction-description">{{ inc.source }}</span>
+                            <span class="transaction-amount income-amount">+${{ "{:,.0f}".format(inc.amount) }}</span>
+                        </div>
+                        <div class="transaction-meta">
+                            <span class="transaction-date">{{ inc.date }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-data">No hay ingresos recientes</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Ingresos - Cash Track{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h2>Gestión de Ingresos</h2>
+
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('income') }}" class="filter-form">
+            <select name="month" id="month">
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}" {% if m == month %}selected{% endif %}>
+                    {{ ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][m-1] }}
+                </option>
+                {% endfor %}
+            </select>
+            <select name="year" id="year">
+                {% for y in range(current_year - 5, current_year + 2) %}
+                <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-secondary">Filtrar</button>
+        </form>
+    </div>
+
+    <div class="form-card">
+        <h3>Agregar Nuevo Ingreso</h3>
+        <form method="POST">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">Fecha</label>
+                    <input type="date" id="date" name="date" required value="{{ request.form.date or '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="source">Fuente</label>
+                    <input type="text" id="source" name="source" required placeholder="Ej: Salario, Freelance, etc.">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="amount_usd">💵 Monto en Dólares (USD)</label>
+                    <input type="number" id="amount_usd" name="amount_usd" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="usd_rate">Cotización USD/ARS</label>
+                    <input type="number" id="usd_rate" name="usd_rate" step="0.01" min="0" placeholder="1500.00" value="1500">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="amount">💰 Monto en Pesos (ARS)</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00" readonly>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Agregar Ingreso</button>
+        </form>
+    </div>
+
+    <script>
+        // Auto-calculate ARS from USD
+        const amountUsd = document.getElementById('amount_usd');
+        const usdRate = document.getElementById('usd_rate');
+        const amountArs = document.getElementById('amount');
+
+        function calculateARS() {
+            const usd = parseFloat(amountUsd.value) || 0;
+            const rate = parseFloat(usdRate.value) || 0;
+
+            if (usd > 0 && rate > 0) {
+                amountArs.value = (usd * rate).toFixed(2);
+                amountArs.readOnly = true;
+            } else {
+                amountArs.readOnly = false;
+            }
+        }
+
+        amountUsd.addEventListener('input', calculateARS);
+        usdRate.addEventListener('input', calculateARS);
+
+        // Allow manual ARS input when USD is empty
+        amountUsd.addEventListener('blur', function() {
+            if (!this.value) {
+                amountArs.readOnly = false;
+            }
+        });
+    </script>
+
+    <div class="table-card">
+        <h3>Listado de Ingresos</h3>
+        {% if income %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Fuente</th>
+                    <th>Monto</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inc in income %}
+                <tr>
+                    <td>{{ inc.date }}</td>
+                    <td>{{ inc.source }}</td>
+                    <td>${{ "%.2f"|format(inc.amount) }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('delete_income', income_id=inc.id) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este ingreso?')">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-data">No hay ingresos registrados para este período</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

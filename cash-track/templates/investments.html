@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block title %}Inversiones - Cash Track{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h2>Gestión de Inversiones</h2>
+
+    <!-- Summary Cards -->
+    <div class="investment-summary">
+        <div class="inv-card inv-invested">
+            <h3>💰 Total Invertido</h3>
+            <p class="inv-amount">${{ total_invested|format_number }}</p>
+        </div>
+        <div class="inv-card inv-current">
+            <h3>📈 Valor Actual</h3>
+            <p class="inv-amount">${{ total_current|format_number }}</p>
+        </div>
+        <div class="inv-card inv-profit {% if (total_current - total_invested) >= 0 %}positive{% else %}negative{% endif %}">
+            <h3>{% if (total_current - total_invested) >= 0 %}💹{% else %}📉{% endif %} Rendimiento</h3>
+            <p class="inv-amount">${{ (total_current - total_invested)|format_number }}</p>
+            {% if total_invested > 0 %}
+            <p class="inv-percentage">{{ "%.1f"|format(((total_current - total_invested) / total_invested * 100)) }}%</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="form-card">
+        <h3>💎 Agregar Nueva Inversión</h3>
+        <form method="POST" class="quick-investment-form">
+            <div class="form-group">
+                <label>🏦 Plataforma de Inversión</label>
+                <div class="platform-grid">
+                    {% for platform in investment_platforms %}
+                    <label class="platform-option">
+                        <input type="radio" name="type" value="{{ platform }}" required>
+                        <span class="platform-card">
+                            <span class="platform-icon">
+                                {% if platform == 'Binance' %}🟡
+                                {% elif platform == 'Bull Market' %}🐂
+                                {% elif platform == 'Invertir Online' %}📊
+                                {% elif platform == 'Kraken' %}🐙
+                                {% elif platform == 'Coinbase' %}🔵
+                                {% elif platform == 'Mercado Pago' %}💙
+                                {% elif platform == 'Ualá' %}🔴
+                                {% elif platform == 'Brubank' %}🟣
+                                {% else %}💼
+                                {% endif %}
+                            </span>
+                            <span class="platform-name">{{ platform }}</span>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">✏️ Activo/Descripción</label>
+                    <input type="text" id="name" name="name" required placeholder="Ej: BTC, Acciones AAPL, Plazo Fijo...">
+                </div>
+                <div class="form-group">
+                    <label for="amount">💵 Monto Invertido (ARS)</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="current_value">📈 Valor Actual (ARS)</label>
+                    <input type="number" id="current_value" name="current_value" step="0.01" min="0" placeholder="Dejar vacío si es igual al invertido">
+                </div>
+                <div class="form-group">
+                    <label for="date">📅 Fecha</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">📝 Notas (opcional)</label>
+                <input type="text" id="notes" name="notes" placeholder="Información adicional...">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large">✅ Agregar Inversión</button>
+        </form>
+    </div>
+
+    <script>
+        // Set today's date by default
+        document.getElementById('date').valueAsDate = new Date();
+    </script>
+
+    <!-- Binance Integration Card -->
+    <div class="binance-integration-card">
+        <h3>🟡 Integración con Binance</h3>
+        <p>Conecta tu cuenta de Binance para obtener precios reales y sincronizar tus balances automáticamente</p>
+
+        <div class="binance-actions">
+            {% if has_binance_credentials %}
+            <div class="binance-status">
+                <span class="status-badge status-connected">✅ Conectado</span>
+                {% if is_testnet %}
+                <span class="status-badge status-testnet">🧪 Testnet</span>
+                {% endif %}
+            </div>
+            <div class="binance-buttons">
+                <a href="{{ url_for('binance_balances') }}" class="btn btn-primary">💰 Ver Balances</a>
+                <a href="{{ url_for('binance_config') }}" class="btn btn-secondary">⚙️ Configuración</a>
+            </div>
+            {% else %}
+            <div class="binance-status">
+                <span class="status-badge status-disconnected">❌ No conectado</span>
+            </div>
+            <div class="binance-buttons">
+                <a href="{{ url_for('binance_config') }}" class="btn btn-primary">🔑 Configurar Binance</a>
+            </div>
+            <p class="binance-note">Necesitarás tus API Keys de Binance (solo con permisos de lectura)</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Binance Balances in Real-Time -->
+    {% if binance_balances %}
+    <div class="binance-balances-card">
+        <div class="section-header">
+            <h3>💰 Balances de Binance en Tiempo Real</h3>
+            <div class="balance-refresh-info">
+                <span class="refresh-indicator">🔄 Actualizado automáticamente</span>
+            </div>
+        </div>
+
+        <div class="binance-summary-cards">
+            <div class="binance-summary-card">
+                <h4>💵 Total en USD</h4>
+                <p class="binance-total-amount">${{ "%.2f"|format(binance_total_usd) }}</p>
+            </div>
+            <div class="binance-summary-card">
+                <h4>💰 Total en ARS</h4>
+                <p class="binance-total-amount">${{ "{:,.2f}".format(binance_total_ars) }}</p>
+            </div>
+            <div class="binance-summary-card">
+                <h4>💱 Tasa de Cambio</h4>
+                <p class="binance-total-amount">1 USD = ${{ "%.2f"|format(exchange_rate) }} ARS</p>
+            </div>
+        </div>
+
+        <div class="binance-balances-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Activo</th>
+                        <th>Disponible</th>
+                        <th>Bloqueado</th>
+                        <th>Total</th>
+                        <th>Precio USD</th>
+                        <th>Precio ARS</th>
+                        <th>Valor Total USD</th>
+                        <th>Valor Total ARS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for balance in binance_balances %}
+                    <tr>
+                        <td><strong>{{ balance.asset }}</strong></td>
+                        <td>{{ "%.8f"|format(balance.free) }}</td>
+                        <td>{{ "%.8f"|format(balance.locked) }}</td>
+                        <td><strong>{{ "%.8f"|format(balance.total) }}</strong></td>
+                        <td>${{ "%.2f"|format(balance.price_usd) }}</td>
+                        <td>${{ "{:,.2f}".format(balance.price_ars) }}</td>
+                        <td><strong>${{ "%.2f"|format(balance.total_usd) }}</strong></td>
+                        <td><strong>${{ "{:,.2f}".format(balance.total_ars) }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="binance-actions-footer">
+            <form method="POST" action="{{ url_for('sync_binance_to_investments') }}" style="display: inline;">
+                <button type="submit" class="btn btn-success">
+                    🔄 Sincronizar con Inversiones
+                </button>
+            </form>
+            <a href="{{ url_for('binance_balances') }}" class="btn btn-info">
+                📊 Ver Detalles Completos
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="table-card">
+        <div class="section-header">
+            <h3>Listado de Inversiones</h3>
+            <form method="POST" action="{{ url_for('update_investment_prices') }}" style="display: inline;">
+                <button type="submit" class="btn btn-success">
+                    🔄 Actualizar Precios en Tiempo Real
+                </button>
+            </form>
+        </div>
+        {% if investments %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Nombre</th>
+                    <th>Invertido</th>
+                    <th>Valor Actual</th>
+                    <th>Rendimiento</th>
+                    <th>Notas</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in investments %}
+                <tr>
+                    <td>{{ inv.date }}</td>
+                    <td>{{ inv.type }}</td>
+                    <td>{{ inv.name }}</td>
+                    <td>${{ "%.2f"|format(inv.amount) }}</td>
+                    <td>${{ "%.2f"|format(inv.current_value or inv.amount) }}</td>
+                    <td class="{% if (inv.current_value or inv.amount) - inv.amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}">
+                        ${{ "%.2f"|format((inv.current_value or inv.amount) - inv.amount) }}
+                        ({{ "%.1f"|format(((inv.current_value or inv.amount) - inv.amount) / inv.amount * 100) }}%)
+                    </td>
+                    <td>{{ inv.notes or '-' }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('delete_investment', investment_id=inv.id) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta inversión?')">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-data">No hay inversiones registradas</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.binance-integration-card {
+    background: linear-gradient(135deg, #f0b90b 0%, #f8d12f 100%);
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.binance-integration-card h3 {
+    margin: 0 0 10px 0;
+    color: #1e2026;
+    font-size: 22px;
+}
+
+.binance-integration-card > p {
+    margin: 0 0 20px 0;
+    color: #1e2026;
+    font-size: 14px;
+}
+
+.binance-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.binance-status {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-connected {
+    background: #4caf50;
+    color: white;
+}
+
+.status-disconnected {
+    background: #f44336;
+    color: white;
+}
+
+.status-testnet {
+    background: #ff9800;
+    color: white;
+}
+
+.binance-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.binance-note {
+    margin: 10px 0 0 0;
+    font-size: 12px;
+    color: #1e2026;
+    font-style: italic;
+}
+
+.binance-balances-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #f0b90b;
+}
+
+.binance-balances-card .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.binance-balances-card .section-header h3 {
+    margin: 0;
+    color: #1e2026;
+    font-size: 20px;
+}
+
+.refresh-indicator {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.binance-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.binance-summary-card {
+    background: linear-gradient(135deg, #f0b90b 0%, #f8d12f 100%);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.binance-summary-card h4 {
+    margin: 0 0 10px 0;
+    color: #1e2026;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.binance-total-amount {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e2026;
+}
+
+.binance-balances-table {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.binance-balances-table table {
+    width: 100%;
+    font-size: 13px;
+}
+
+.binance-balances-table th {
+    background: #f5f5f5;
+    padding: 10px;
+    text-align: left;
+    font-size: 12px;
+}
+
+.binance-balances-table td {
+    padding: 10px;
+}
+
+.binance-balances-table tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.binance-actions-footer {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+</style>
+
+{% endblock %}
