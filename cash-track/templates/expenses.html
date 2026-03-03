@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Gastos - Cash Track{% endblock %}
+{% block title %}Gastos - AurefiQ{% endblock %}
 
 {% block content %}
 <div class="page-container">
     <h2>Gestión de Gastos</h2>
 
     <div class="filter-section">
+        {% if show_all %}
+        <div style="background: #667eea; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px;">
+            📋 Mostrando todos los gastos (últimos 100). <a href="{{ url_for('expenses') }}" style="color: white; text-decoration: underline;">Volver a vista filtrada</a>
+        </div>
+        {% else %}
         <form method="GET" action="{{ url_for('expenses') }}" class="filter-form">
             <select name="month" id="month">
                 {% for m in range(1, 13) %}
@@ -23,6 +28,7 @@
             </select>
             <button type="submit" class="btn btn-secondary">Filtrar</button>
         </form>
+        {% endif %}
     </div>
 
     <div class="form-card quick-expense-form">
@@ -69,8 +75,23 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="amount">💰 Monto (ARS)</label>
-                    <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00" autofocus>
+                    <label for="amount" id="amountLabel">💰 Monto</label>
+                    <div class="amount-input-wrapper">
+                        <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00" autofocus class="amount-input">
+                        <div class="currency-selector">
+                            <input type="radio" id="curr-ars" name="currency" value="ARS" checked>
+                            <label for="curr-ars" class="currency-option">
+                                <span class="currency-symbol">$</span>
+                                <span class="currency-code">ARS</span>
+                            </label>
+
+                            <input type="radio" id="curr-usd" name="currency" value="USD">
+                            <label for="curr-usd" class="currency-option">
+                                <span class="currency-symbol">US$</span>
+                                <span class="currency-code">USD</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -95,15 +116,48 @@
         </form>
     </div>
 
+    <!-- Formulario para subir PDF -->
+    <div class="form-card">
+        <h3>📄 Importar desde Resumen de Tarjeta</h3>
+        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">
+            Sube el PDF de tu resumen de tarjeta y la IA extraerá automáticamente todos los gastos
+        </p>
+        <form method="POST" action="{{ url_for('upload_expenses_pdf') }}" enctype="multipart/form-data" id="pdfUploadForm">
+            <div class="form-group">
+                <label for="pdf_file">📎 Seleccionar PDF</label>
+                <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" required
+                       style="padding: 15px; border-radius: 8px;">
+                <small style="display: block; color: var(--text-muted); margin-top: 8px;">
+                    Formatos aceptados: PDF (máximo 16MB). La IA extraerá: fecha, descripción, categoría, cuotas y monto (USD/ARS)
+                </small>
+            </div>
+            <button type="submit" class="btn btn-primary btn-large">
+                🚀 Procesar PDF con IA
+            </button>
+        </form>
+    </div>
+
     <div class="table-card">
-        <h3>Listado de Gastos</h3>
+        <div class="table-header">
+            <h3>Listado de Gastos</h3>
+            <div class="bulk-actions" id="bulkActions" style="display: none;">
+                <span id="selectedCount">0 seleccionados</span>
+                <button type="button" class="btn btn-danger" onclick="deleteSelected()">
+                    🗑️ Eliminar Seleccionados
+                </button>
+            </div>
+        </div>
         {% if expenses %}
         <table class="data-table">
             <thead>
                 <tr>
+                    <th style="width: 50px;">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" title="Seleccionar todos">
+                    </th>
                     <th>Fecha</th>
                     <th>Categoría</th>
                     <th>Descripción</th>
+                    <th>Cuotas</th>
                     <th>Medio de Pago</th>
                     <th>Monto</th>
                     <th>Acciones</th>
@@ -112,11 +166,31 @@
             <tbody>
                 {% for expense in expenses %}
                 <tr>
+                    <td>
+                        <input type="checkbox" class="expense-checkbox" value="{{ expense.id }}" onchange="updateBulkActions()">
+                    </td>
                     <td>{{ expense.date }}</td>
                     <td>{{ expense.category }}</td>
                     <td>{{ expense.description }}</td>
+                    <td>
+                        {% if expense.installment_number %}
+                            <span style="background: #667eea; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+                                {{ expense.installment_number }}
+                            </span>
+                        {% else %}
+                            <span style="color: #9ca3af;">-</span>
+                        {% endif %}
+                    </td>
                     <td>{{ expense.payment_method }}</td>
-                    <td>${{ "%.2f"|format(expense.amount) }}</td>
+                    <td>
+                        <span style="font-weight: 600;">
+                            {% if expense.currency == 'USD' %}
+                                <span style="color: #10b981;">USD ${{ "%.2f"|format(expense.amount) }}</span>
+                            {% else %}
+                                ${{ "%.2f"|format(expense.amount) }}
+                            {% endif %}
+                        </span>
+                    </td>
                     <td>
                         <form method="POST" action="{{ url_for('delete_expense', expense_id=expense.id) }}" style="display: inline;">
                             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este gasto?')">Eliminar</button>
@@ -332,5 +406,78 @@
             closeDeleteConfirm();
         }
     });
+
+    // Bulk selection functions
+    function toggleSelectAll(checkbox) {
+        const checkboxes = document.querySelectorAll('.expense-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = checkbox.checked;
+        });
+        updateBulkActions();
+    }
+
+    function updateBulkActions() {
+        const checkboxes = document.querySelectorAll('.expense-checkbox:checked');
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCount = document.getElementById('selectedCount');
+        const selectAll = document.getElementById('selectAll');
+
+        if (checkboxes.length > 0) {
+            bulkActions.style.display = 'flex';
+            selectedCount.textContent = checkboxes.length + ' seleccionado' + (checkboxes.length > 1 ? 's' : '');
+        } else {
+            bulkActions.style.display = 'none';
+        }
+
+        // Update "select all" checkbox state
+        const allCheckboxes = document.querySelectorAll('.expense-checkbox');
+        if (checkboxes.length === allCheckboxes.length && allCheckboxes.length > 0) {
+            selectAll.checked = true;
+            selectAll.indeterminate = false;
+        } else if (checkboxes.length > 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = true;
+        } else {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        }
+    }
+
+    async function deleteSelected() {
+        const checkboxes = document.querySelectorAll('.expense-checkbox:checked');
+        const expenseIds = Array.from(checkboxes).map(cb => cb.value);
+
+        if (expenseIds.length === 0) {
+            alert('No hay gastos seleccionados');
+            return;
+        }
+
+        const confirmMsg = `¿Estás seguro de eliminar ${expenseIds.length} gasto${expenseIds.length > 1 ? 's' : ''}?`;
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/delete_expenses_bulk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ expense_ids: expenseIds })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Reload the page to show updated list
+                window.location.reload();
+            } else {
+                alert('Error al eliminar los gastos: ' + (data.error || 'Error desconocido'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al eliminar los gastos');
+        }
+    }
 </script>
 {% endblock %}

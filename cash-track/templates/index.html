@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - Cash Track{% endblock %}
+{% block title %}Dashboard - AurefiQ{% endblock %}
 
 {% block content %}
 <div class="dashboard">
     <div class="header-section">
         <h2>Dashboard</h2>
+        <div class="dollar-rate-badge" title="Cotización Dólar MEP">
+            💵 Dólar MEP: ${{ "%.2f"|format(dollar_mep_rate) }}
+        </div>
         <div class="filter-section">
             <form method="GET" action="{{ url_for('index') }}" class="filter-form">
                 <select name="month" id="month">
@@ -31,15 +34,60 @@
         <div class="card card-income">
             <h3>Total Ingresos</h3>
             <p class="amount">${{ total_income|format_number }}</p>
+            <div class="card-change {% if income_change >= 0 %}positive{% else %}negative{% endif %}">
+                <span class="change-icon">{% if income_change >= 0 %}⬆{% else %}⬇{% endif %}</span>
+                <span class="change-text">
+                    {% if income_change >= 0 %}+{% endif %}${{ income_change|abs|format_number }}
+                    ({% if income_change_pct >= 0 %}+{% endif %}{{ "%.1f"|format(income_change_pct) }}%)
+                </span>
+                <span class="change-label">vs mes anterior</span>
+            </div>
         </div>
         <div class="card card-expense">
-            <h3>Total Gastos</h3>
+            <h3>🇦🇷 Gastos en ARS</h3>
             <p class="amount">${{ total_expenses|format_number }}</p>
+            <div class="card-change {% if expense_change <= 0 %}positive{% else %}negative{% endif %}">
+                <span class="change-icon">{% if expense_change <= 0 %}⬇{% else %}⬆{% endif %}</span>
+                <span class="change-text">
+                    {% if expense_change >= 0 %}+{% endif %}${{ expense_change|abs|format_number }}
+                    ({% if expense_change >= 0 %}+{% endif %}{{ "%.1f"|format(expense_change_pct) }}%)
+                </span>
+                <span class="change-label">vs mes anterior</span>
+            </div>
+        </div>
+        <div class="card card-expense">
+            <h3>💵 Gastos en USD</h3>
+            <p class="amount">US${{ total_usd_expenses|format_number }}</p>
+            <p class="usd-to-ars-conversion" title="Convertido al dólar MEP">
+                ≈ ${{ total_usd_expenses_in_ars|format_number }} ARS
+            </p>
+            <div class="card-change {% if usd_expense_change <= 0 %}positive{% else %}negative{% endif %}">
+                <span class="change-icon">{% if usd_expense_change <= 0 %}⬇{% else %}⬆{% endif %}</span>
+                <span class="change-text">
+                    {% if usd_expense_change >= 0 %}+{% endif %}US${{ usd_expense_change|abs|format_number }}
+                    ({% if usd_expense_change >= 0 %}+{% endif %}{{ "%.1f"|format(usd_expense_change_pct) }}%)
+                </span>
+                <span class="change-label">vs mes anterior</span>
+            </div>
         </div>
         <div class="card card-balance {% if balance >= 0 %}positive{% else %}negative{% endif %}">
             <h3>Balance</h3>
             <p class="amount">${{ balance|format_number }}</p>
+            <p class="balance-note" title="Los gastos en USD se convierten a ARS usando el dólar MEP">
+                ℹ️ Incluye gastos USD convertidos a ARS
+            </p>
+            <div class="card-change {% if balance_change >= 0 %}positive{% else %}negative{% endif %}">
+                <span class="change-icon">{% if balance_change >= 0 %}⬆{% else %}⬇{% endif %}</span>
+                <span class="change-text">
+                    {% if balance_change >= 0 %}+{% endif %}${{ balance_change|abs|format_number }}
+                </span>
+                <span class="change-label">vs mes anterior</span>
+            </div>
         </div>
+    </div>
+
+    <!-- Investment Card Full Width -->
+    <div class="investment-card-full">
         <div class="card card-investment">
             <h3>💰 Inversiones</h3>
             <div class="investment-summary-mini">
@@ -85,15 +133,55 @@
                             backgroundColor: [
                                 '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
                                 '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
-                            ]
+                            ],
+                            borderWidth: 3,
+                            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
+                            hoverOffset: 15,
+                            hoverBorderWidth: 4
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true,
+                            duration: 1000,
+                            easing: 'easeOutQuart'
+                        },
                         plugins: {
                             legend: {
-                                position: 'bottom'
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    font: {
+                                        size: 12,
+                                        weight: '600'
+                                    },
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        let value = context.parsed || 0;
+                                        let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        let percentage = ((value / total) * 100).toFixed(1);
+                                        return label + ': $' + value.toLocaleString() + ' (' + percentage + '%)';
+                                    }
+                                }
                             }
                         }
                     }
@@ -109,7 +197,7 @@
             {% if expenses_by_category %}
             <div class="category-list">
                 {% for item in expenses_by_category %}
-                <div class="category-item">
+                <div class="category-item clickable" onclick="toggleCategory('{{ item.category }}')">
                     <div class="category-info">
                         <span class="category-icon">
                             {% if item.category == 'Alimentación' %}🍽️
@@ -129,7 +217,31 @@
                             </div>
                         </div>
                     </div>
-                    <span class="category-amount">${{ "{:,.0f}".format(item.total) }}</span>
+                    <div class="category-amount-wrapper">
+                        <span class="category-amount">${{ item.total|format_number }}</span>
+                        <span class="category-toggle-icon">▼</span>
+                    </div>
+                </div>
+
+                <!-- Expenses detail for this category -->
+                <div id="category-{{ item.category }}" class="category-expenses-detail" style="display: none;">
+                    {% if item.category in expenses_detail %}
+                        {% for expense in expenses_detail[item.category] %}
+                        <div class="expense-detail-item">
+                            <div class="expense-detail-left">
+                                <span class="expense-detail-desc">{{ expense.description }}</span>
+                                <span class="expense-detail-date">{{ expense.date }}</span>
+                            </div>
+                            <span class="expense-detail-amount {% if expense.currency == 'USD' %}usd-amount{% endif %}">
+                                {% if expense.currency == 'USD' %}
+                                    US$ {{ expense.amount|format_number }}
+                                {% else %}
+                                    ${{ expense.amount|format_number }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
@@ -138,6 +250,139 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Trend Chart Section -->
+    <div class="chart-full-width">
+        <h3>📈 Evolución Mensual (Últimos 6 meses)</h3>
+        <canvas id="trendChart"></canvas>
+    </div>
+
+    <script>
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        const trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for item in monthly_expenses %}
+                    '{{ item.month }}'{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Gastos',
+                    data: [
+                        {% for item in monthly_expenses %}
+                        {{ item.total }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#ef4444',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#ef4444',
+                    pointHoverBorderWidth: 3
+                }, {
+                    label: 'Ingresos',
+                    data: [
+                        {% for item in monthly_income %}
+                        {{ item.total }}{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#10b981',
+                    pointHoverBorderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                animation: {
+                    duration: 1500,
+                    easing: 'easeInOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 14,
+                                weight: '600'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 
     <div class="recent-section">
         <div class="recent-box">
@@ -160,7 +405,13 @@
                     <div class="transaction-details">
                         <div class="transaction-header">
                             <span class="transaction-description">{{ expense.description }}</span>
-                            <span class="transaction-amount expense-amount">-${{ "{:,.0f}".format(expense.amount) }}</span>
+                            <span class="transaction-amount expense-amount {% if expense.currency == 'USD' %}usd-amount{% endif %}">
+                                {% if expense.currency == 'USD' %}
+                                    -US${{ "{:,.0f}".format(expense.amount) }}
+                                {% else %}
+                                    -${{ "{:,.0f}".format(expense.amount) }}
+                                {% endif %}
+                            </span>
                         </div>
                         <div class="transaction-meta">
                             <span class="transaction-category">{{ expense.category }}</span>
@@ -201,4 +452,22 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleCategory(category) {
+    const detailElement = document.getElementById('category-' + category);
+    const categoryItem = event.currentTarget;
+    const toggleIcon = categoryItem.querySelector('.category-toggle-icon');
+
+    if (detailElement.style.display === 'none') {
+        detailElement.style.display = 'block';
+        toggleIcon.textContent = '▲';
+        categoryItem.classList.add('expanded');
+    } else {
+        detailElement.style.display = 'none';
+        toggleIcon.textContent = '▼';
+        categoryItem.classList.remove('expanded');
+    }
+}
+</script>
 {% endblock %}
