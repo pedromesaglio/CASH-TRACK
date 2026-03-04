@@ -4882,6 +4882,8 @@ table th, table td {
     padding: 0;
     z-index: 1001;
     transition: transform 0.3s ease;
+    margin: 0;
+    outline: none;
 }
 
 .hamburger-line {
@@ -4909,7 +4911,7 @@ table th, table td {
 @media screen and (max-width: 768px) {
     /* Show hamburger button on mobile */
     .hamburger-menu {
-        display: flex;
+        display: flex !important;
     }
 
     /* Hide navigation by default on mobile */
