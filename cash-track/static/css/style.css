@@ -4864,3 +4864,186 @@ table th, table td {
         image-rendering: crisp-edges;
     }
 }
+
+/* ============================================
+   HAMBURGER MENU STYLES
+   ============================================ */
+
+/* Hamburger button - Hidden by default, shown on mobile */
+.hamburger-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+    transition: transform 0.3s ease;
+}
+
+.hamburger-line {
+    width: 100%;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+/* Hamburger animation when active */
+.hamburger-menu.active .hamburger-line:nth-child(1) {
+    transform: translateY(10.5px) rotate(45deg);
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active .hamburger-line:nth-child(3) {
+    transform: translateY(-10.5px) rotate(-45deg);
+}
+
+/* Mobile Navigation Styles */
+@media screen and (max-width: 768px) {
+    /* Show hamburger button on mobile */
+    .hamburger-menu {
+        display: flex;
+    }
+
+    /* Hide navigation by default on mobile */
+    .nav-links {
+        position: fixed;
+        top: 70px;
+        right: -100%;
+        width: 280px;
+        height: calc(100vh - 70px);
+        background: var(--card-bg);
+        flex-direction: column;
+        padding: 2rem 0;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+        transition: right 0.3s ease;
+        overflow-y: auto;
+        z-index: 1000;
+        border-left: 2px solid var(--primary-color);
+    }
+
+    /* Show navigation when active */
+    .nav-links.active {
+        right: 0;
+    }
+
+    .nav-links li {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .nav-links li a {
+        display: block;
+        width: 100%;
+        padding: 1rem 2rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .nav-links li a:hover {
+        background: var(--primary-color);
+        color: white;
+        padding-left: 2.5rem;
+    }
+
+    /* Theme toggle in mobile menu */
+    .nav-links li .theme-toggle {
+        margin: 1rem 2rem;
+    }
+
+    /* Admin link styling in mobile */
+    .nav-links .admin-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: bold;
+    }
+
+    /* Logout link styling in mobile */
+    .nav-links li:last-child a {
+        color: #e74c3c;
+        font-weight: 500;
+        border-bottom: none;
+    }
+
+    .nav-links li:last-child a:hover {
+        background: #e74c3c;
+        color: white;
+    }
+
+    /* Navbar container adjustments */
+    .navbar .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .navbar .logo {
+        flex: 1;
+    }
+}
+
+/* Overlay cuando el menú está abierto */
+@media screen and (max-width: 768px) {
+    .nav-links.active::before {
+        content: '';
+        position: fixed;
+        top: 70px;
+        left: 0;
+        width: calc(100vw - 280px);
+        height: calc(100vh - 70px);
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+}
+
+/* Smooth scrolling for mobile menu */
+@media screen and (max-width: 768px) {
+    .nav-links {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-links::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .nav-links::-webkit-scrollbar-track {
+        background: var(--card-bg);
+    }
+
+    .nav-links::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 3px;
+    }
+}
+
+/* Small mobile adjustments */
+@media screen and (max-width: 480px) {
+    .nav-links {
+        width: 240px;
+    }
+
+    .nav-links li a {
+        padding: 0.875rem 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .nav-links li .theme-toggle {
+        margin: 1rem 1.5rem;
+    }
+}
+
+/* Hide hamburger menu on desktop */
+@media screen and (min-width: 769px) {
+    .hamburger-menu {
+        display: none;
+    }
+}
