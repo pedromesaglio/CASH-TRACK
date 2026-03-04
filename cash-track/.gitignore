@@ -119,3 +119,10 @@ gunicorn.ctl
 
 # Migration scripts (keep in repo, but backups not needed)
 cashtrack_backup_*.db
+
+# Railway specific
+.railway/
+
+# Backup files
+*.backup
+app.py.backup

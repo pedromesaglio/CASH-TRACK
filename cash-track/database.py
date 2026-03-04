@@ -6,7 +6,16 @@ from werkzeug.security import generate_password_hash
 load_dotenv()
 
 # Database configuration
-DB_TYPE = os.getenv('DB_TYPE', 'sqlite')  # 'sqlite' or 'postgresql'
+# Railway provides DATABASE_URL, so check for that first
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    # Railway detected - use PostgreSQL
+    DB_TYPE = 'postgresql'
+    # Railway uses DATABASE_URL in the format: postgresql://user:password@host:port/database
+else:
+    # Local development
+    DB_TYPE = os.getenv('DB_TYPE', 'sqlite')  # 'sqlite' or 'postgresql'
 
 # SQLite configuration
 SQLITE_DATABASE = 'cashtrack.db'
@@ -26,13 +35,17 @@ def get_db():
         import psycopg2
         import psycopg2.extras
 
-        conn = psycopg2.connect(
-            host=POSTGRES_CONFIG['host'],
-            port=POSTGRES_CONFIG['port'],
-            database=POSTGRES_CONFIG['database'],
-            user=POSTGRES_CONFIG['user'],
-            password=POSTGRES_CONFIG['password']
-        )
+        # Use DATABASE_URL if available (Railway), otherwise use individual config
+        if DATABASE_URL:
+            conn = psycopg2.connect(DATABASE_URL)
+        else:
+            conn = psycopg2.connect(
+                host=POSTGRES_CONFIG['host'],
+                port=POSTGRES_CONFIG['port'],
+                database=POSTGRES_CONFIG['database'],
+                user=POSTGRES_CONFIG['user'],
+                password=POSTGRES_CONFIG['password']
+            )
         # Use DictCursor to get results as dictionaries (similar to SQLite Row)
         conn.cursor_factory = psycopg2.extras.RealDictCursor
         return conn
@@ -42,6 +55,21 @@ def get_db():
         conn = sqlite3.connect(SQLITE_DATABASE)
         conn.row_factory = sqlite3.Row
         return conn
+
+def get_date_format_funcs():
+    """Get date formatting functions based on DB_TYPE"""
+    if DB_TYPE == 'postgresql':
+        return {
+            'year': lambda col: f"EXTRACT(YEAR FROM {col})::text",
+            'month': lambda col: f"TO_CHAR({col}, 'MM')",
+            'year_month': lambda col: f"TO_CHAR({col}, 'YYYY-MM')",
+        }
+    else:
+        return {
+            'year': lambda col: f"strftime('%Y', {col})",
+            'month': lambda col: f"strftime('%m', {col})",
+            'year_month': lambda col: f"strftime('%Y-%m', {col})",
+        }
 
 def init_db():
     """Initialize database with tables"""

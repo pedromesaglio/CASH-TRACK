@@ -6,7 +6,7 @@
 <div class="page-container">
     <div class="header-with-actions">
         <h2>💰 Balances de Binance en Tiempo Real</h2>
-        <a href="{{ url_for('binance_config') }}" class="btn btn-secondary">⚙️ Configuración</a>
+        <a href="{{ url_for('binance.binance_config') }}" class="btn btn-secondary">⚙️ Configuración</a>
     </div>
 
     <div class="info-card">
@@ -62,7 +62,7 @@
     <div class="action-card">
         <h3>📥 Importar a Inversiones</h3>
         <p>¿Querés sincronizar estos balances con tu portafolio de inversiones?</p>
-        <form method="POST" action="{{ url_for('sync_binance_to_investments') }}">
+        <form method="POST" action="{{ url_for('binance.sync_binance_to_investments') }}">
             <button type="submit" class="btn btn-success btn-large">
                 🔄 Sincronizar con Inversiones
             </button>
@@ -78,8 +78,8 @@
     {% endif %}
 
     <div class="button-group">
-        <a href="{{ url_for('investments') }}" class="btn btn-primary">← Volver a Inversiones</a>
-        <a href="{{ url_for('binance_balances') }}" class="btn btn-info">🔄 Actualizar</a>
+        <a href="{{ url_for('investments.investments') }}" class="btn btn-primary">← Volver a Inversiones</a>
+        <a href="{{ url_for('binance.binance_balances') }}" class="btn btn-info">🔄 Actualizar</a>
     </div>
 </div>
 

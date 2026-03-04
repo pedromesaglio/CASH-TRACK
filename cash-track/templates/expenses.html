@@ -9,10 +9,10 @@
     <div class="filter-section">
         {% if show_all %}
         <div style="background: #667eea; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px;">
-            📋 Mostrando todos los gastos (últimos 100). <a href="{{ url_for('expenses') }}" style="color: white; text-decoration: underline;">Volver a vista filtrada</a>
+            📋 Mostrando todos los gastos (últimos 100). <a href="{{ url_for('expenses.expenses') }}" style="color: white; text-decoration: underline;">Volver a vista filtrada</a>
         </div>
         {% else %}
-        <form method="GET" action="{{ url_for('expenses') }}" class="filter-form">
+        <form method="GET" action="{{ url_for('expenses.expenses') }}" class="filter-form">
             <select name="month" id="month">
                 {% for m in range(1, 13) %}
                 <option value="{{ m }}" {% if m == month %}selected{% endif %}>
@@ -122,7 +122,7 @@
         <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">
             Sube el PDF de tu resumen de tarjeta y la IA extraerá automáticamente todos los gastos
         </p>
-        <form method="POST" action="{{ url_for('upload_expenses_pdf') }}" enctype="multipart/form-data" id="pdfUploadForm">
+        <form method="POST" action="{{ url_for('expenses.upload_expenses_pdf') }}" enctype="multipart/form-data" id="pdfUploadForm">
             <div class="form-group">
                 <label for="pdf_file">📎 Seleccionar PDF</label>
                 <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" required
@@ -192,7 +192,7 @@
                         </span>
                     </td>
                     <td>
-                        <form method="POST" action="{{ url_for('delete_expense', expense_id=expense.id) }}" style="display: inline;">
+                        <form method="POST" action="{{ url_for('expenses.delete_expense', expense_id=expense.id) }}" style="display: inline;">
                             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este gasto?')">Eliminar</button>
                         </form>
                     </td>
@@ -234,7 +234,7 @@
                 <!-- Agregar nueva categoría -->
                 <div style="margin-bottom: 30px;">
                     <h4 style="margin-bottom: 16px; color: var(--dark); font-size: 1.1rem;">➕ Agregar Nueva Categoría</h4>
-                    <form method="POST" action="{{ url_for('add_category') }}">
+                    <form method="POST" action="{{ url_for('expenses.add_category') }}">
                         <div class="form-group">
                             <label for="category_name">📝 Nombre de la Categoría</label>
                             <input type="text" id="category_name" name="category_name" required placeholder="Ej: Mascotas, Viajes, etc.">
@@ -261,7 +261,7 @@
                                 <span style="font-size: 1.8rem;">{{ cat.icon }}</span>
                                 <span style="font-weight: 700; color: var(--dark);">{{ cat.name }}</span>
                             </div>
-                            <form method="POST" action="{{ url_for('delete_category', category_id=cat.id) }}" style="display: inline;">
+                            <form method="POST" action="{{ url_for('expenses.delete_category', category_id=cat.id) }}" style="display: inline;">
                                 <button type="submit" class="btn-delete-category" onclick="return confirm('¿Estás seguro de eliminar la categoría {{ cat.name }}?')">
                                     🗑️
                                 </button>

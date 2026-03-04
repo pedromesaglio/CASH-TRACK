@@ -17,12 +17,12 @@
             </div>
             {% if session.user_id %}
             <ul class="nav-links">
-                <li><a href="{{ url_for('index') }}">Dashboard</a></li>
-                <li><a href="{{ url_for('expenses') }}">Gastos</a></li>
-                <li><a href="{{ url_for('income') }}">Ingresos</a></li>
-                <li><a href="{{ url_for('investments') }}">Inversiones</a></li>
+                <li><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('expenses.expenses') }}">Gastos</a></li>
+                <li><a href="{{ url_for('income.income') }}">Ingresos</a></li>
+                <li><a href="{{ url_for('investments.investments') }}">Inversiones</a></li>
                 {% if session.role == 'admin' %}
-                <li><a href="{{ url_for('admin_users') }}" class="admin-link">👑 Admin</a></li>
+                <li><a href="{{ url_for('admin.admin_users') }}" class="admin-link">👑 Admin</a></li>
                 {% endif %}
                 <li>
                     <div class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
@@ -31,7 +31,7 @@
                         <div class="theme-toggle-slider"></div>
                     </div>
                 </li>
-                <li><a href="{{ url_for('logout') }}">Cerrar Sesión ({{ session.username }})</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Cerrar Sesión ({{ session.username }})</a></li>
             </ul>
             {% endif %}
         </div>

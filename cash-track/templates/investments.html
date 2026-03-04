@@ -104,15 +104,15 @@
                 {% endif %}
             </div>
             <div class="binance-buttons">
-                <a href="{{ url_for('binance_balances') }}" class="btn btn-primary">💰 Ver Balances</a>
-                <a href="{{ url_for('binance_config') }}" class="btn btn-secondary">⚙️ Configuración</a>
+                <a href="{{ url_for('binance.binance_balances') }}" class="btn btn-primary">💰 Ver Balances</a>
+                <a href="{{ url_for('binance.binance_config') }}" class="btn btn-secondary">⚙️ Configuración</a>
             </div>
             {% else %}
             <div class="binance-status">
                 <span class="status-badge status-disconnected">❌ No conectado</span>
             </div>
             <div class="binance-buttons">
-                <a href="{{ url_for('binance_config') }}" class="btn btn-primary">🔑 Configurar Binance</a>
+                <a href="{{ url_for('binance.binance_config') }}" class="btn btn-primary">🔑 Configurar Binance</a>
             </div>
             <p class="binance-note">Necesitarás tus API Keys de Binance (solo con permisos de lectura)</p>
             {% endif %}
@@ -176,12 +176,12 @@
         </div>
 
         <div class="binance-actions-footer">
-            <form method="POST" action="{{ url_for('sync_binance_to_investments') }}" style="display: inline;">
+            <form method="POST" action="{{ url_for('binance.sync_binance_to_investments') }}" style="display: inline;">
                 <button type="submit" class="btn btn-success">
                     🔄 Sincronizar con Inversiones
                 </button>
             </form>
-            <a href="{{ url_for('binance_balances') }}" class="btn btn-info">
+            <a href="{{ url_for('binance.binance_balances') }}" class="btn btn-info">
                 📊 Ver Detalles Completos
             </a>
         </div>
@@ -191,7 +191,7 @@
     <div class="table-card">
         <div class="section-header">
             <h3>Listado de Inversiones</h3>
-            <form method="POST" action="{{ url_for('update_investment_prices') }}" style="display: inline;">
+            <form method="POST" action="{{ url_for('investments.update_investment_prices') }}" style="display: inline;">
                 <button type="submit" class="btn btn-success">
                     🔄 Actualizar Precios en Tiempo Real
                 </button>
@@ -225,7 +225,7 @@
                     </td>
                     <td>{{ inv.notes or '-' }}</td>
                     <td>
-                        <form method="POST" action="{{ url_for('delete_investment', investment_id=inv.id) }}" style="display: inline;">
+                        <form method="POST" action="{{ url_for('investments.delete_investment', investment_id=inv.id) }}" style="display: inline;">
                             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta inversión?')">Eliminar</button>
                         </form>
                     </td>
