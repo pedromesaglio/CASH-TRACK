@@ -40,7 +40,12 @@
                         <div class="theme-toggle-slider"></div>
                     </div>
                 </li>
-                <li class="logout-item"><a href="{{ url_for('auth.logout') }}" class="logout-link">Cerrar Sesión ({{ session.username }}) 👤</a></li>
+                <li class="logout-item">
+                    <a href="{{ url_for('auth.logout') }}" class="logout-link">
+                        <span class="logout-text">Cerrar Sesión<br><small>{{ session.username }}</small></span>
+                        <span class="logout-icon">👤</span>
+                    </a>
+                </li>
             </ul>
             {% endif %}
         </div>

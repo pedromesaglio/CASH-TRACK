@@ -4982,14 +4982,42 @@ table th, table td {
         color: #e74c3c !important;
         font-weight: 600 !important;
         border-bottom: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        border: 2px solid #e74c3c !important;
+        border-radius: 8px !important;
+        padding: 1rem 1.5rem !important;
+        margin: 0 1.5rem !important;
+    }
+
+    .nav-links .logout-text {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.4;
+    }
+
+    .nav-links .logout-text small {
+        font-size: 0.85rem;
+        font-weight: 400;
+        opacity: 0.9;
+        word-break: break-all;
+    }
+
+    .nav-links .logout-icon {
+        font-size: 1.5rem;
+        margin-left: 1rem;
+        flex-shrink: 0;
     }
 
     .nav-links .logout-link:hover {
         background: #e74c3c !important;
         color: white !important;
+    }
+
+    .nav-links .logout-link:hover .logout-text small {
+        opacity: 1;
     }
 
     /* Navbar container adjustments */
