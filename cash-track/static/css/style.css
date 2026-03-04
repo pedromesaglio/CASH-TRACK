@@ -4916,22 +4916,22 @@ table th, table td {
     .nav-links {
         position: fixed;
         top: 70px;
-        right: -100%;
+        left: -100%;
         width: 280px;
         height: calc(100vh - 70px);
         background: var(--card-bg);
         flex-direction: column;
         padding: 2rem 0;
-        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-        transition: right 0.3s ease;
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+        transition: left 0.3s ease;
         overflow-y: auto;
         z-index: 1000;
-        border-left: 2px solid var(--primary-color);
+        border-right: 2px solid var(--primary-color);
     }
 
     /* Show navigation when active */
     .nav-links.active {
-        right: 0;
+        left: 0;
     }
 
     .nav-links li {
@@ -4982,12 +4982,18 @@ table th, table td {
     /* Navbar container adjustments */
     .navbar .container {
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
+        position: relative;
+    }
+
+    .navbar .hamburger-menu {
+        position: absolute;
+        left: 1rem;
     }
 
     .navbar .logo {
-        flex: 1;
+        text-align: center;
     }
 }
 
@@ -4997,7 +5003,7 @@ table th, table td {
         content: '';
         position: fixed;
         top: 70px;
-        left: 0;
+        right: 0;
         width: calc(100vw - 280px);
         height: calc(100vh - 70px);
         background: rgba(0, 0, 0, 0.5);
