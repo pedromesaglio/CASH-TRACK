@@ -40,7 +40,7 @@
                         <div class="theme-toggle-slider"></div>
                     </div>
                 </li>
-                <li><a href="{{ url_for('auth.logout') }}">Cerrar Sesión ({{ session.username }})</a></li>
+                <li class="logout-item"><a href="{{ url_for('auth.logout') }}" class="logout-link">Cerrar Sesión ({{ session.username }}) 👤</a></li>
             </ul>
             {% endif %}
         </div>

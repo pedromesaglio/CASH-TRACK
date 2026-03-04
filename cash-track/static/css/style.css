@@ -4970,16 +4970,26 @@ table th, table td {
         font-weight: bold;
     }
 
-    /* Logout link styling in mobile */
-    .nav-links li:last-child a {
-        color: #e74c3c;
-        font-weight: 500;
-        border-bottom: none;
+    /* Logout item - positioned at bottom */
+    .nav-links .logout-item {
+        margin-top: auto;
+        padding-top: 1.5rem;
+        border-top: 2px solid var(--border-color);
     }
 
-    .nav-links li:last-child a:hover {
-        background: #e74c3c;
-        color: white;
+    /* Logout link styling in mobile */
+    .nav-links .logout-link {
+        color: #e74c3c !important;
+        font-weight: 600 !important;
+        border-bottom: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .nav-links .logout-link:hover {
+        background: #e74c3c !important;
+        color: white !important;
     }
 
     /* Navbar container adjustments */
