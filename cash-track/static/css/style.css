@@ -4874,8 +4874,8 @@ table th, table td {
     display: none;
     flex-direction: column;
     justify-content: space-between;
-    width: 30px;
-    height: 24px;
+    width: 32px;
+    height: 28px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -4888,15 +4888,16 @@ table th, table td {
 
 .hamburger-line {
     width: 100%;
-    height: 3px;
-    background: var(--primary-color);
-    border-radius: 3px;
+    height: 4px;
+    background: #6366f1;
+    border-radius: 4px;
     transition: all 0.3s ease;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
 }
 
 /* Hamburger animation when active */
 .hamburger-menu.active .hamburger-line:nth-child(1) {
-    transform: translateY(10.5px) rotate(45deg);
+    transform: translateY(12px) rotate(45deg);
 }
 
 .hamburger-menu.active .hamburger-line:nth-child(2) {
@@ -4904,7 +4905,7 @@ table th, table td {
 }
 
 .hamburger-menu.active .hamburger-line:nth-child(3) {
-    transform: translateY(-10.5px) rotate(-45deg);
+    transform: translateY(-12px) rotate(-45deg);
 }
 
 /* Mobile Navigation Styles */
