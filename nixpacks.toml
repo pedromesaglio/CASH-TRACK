@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["python311", "pip"]
-
-[phases.install]
-cmds = ["python3 -m pip install -r cash-track/requirements.txt"]
-
-[start]
-cmd = "cd cash-track && gunicorn wsgi:app"
