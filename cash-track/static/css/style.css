@@ -4515,6 +4515,15 @@ table th, table td {
         height: 32px;
     }
 
+    .hamburger-menu {
+        width: 24px;
+        height: 20px;
+    }
+
+    .hamburger-line {
+        height: 3px;
+    }
+
     .nav-links {
         flex-direction: column;
         width: 100%;
