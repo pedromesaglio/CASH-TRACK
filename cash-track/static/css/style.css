@@ -4869,9 +4869,9 @@ table th, table td {
    HAMBURGER MENU STYLES
    ============================================ */
 
-/* Hamburger button - Hidden by default, shown on mobile */
+/* Hamburger button - Always visible */
 .hamburger-menu {
-    display: none;
+    display: flex;
     flex-direction: column;
     justify-content: space-between;
     width: 32px;
@@ -4884,6 +4884,8 @@ table th, table td {
     transition: transform 0.3s ease;
     margin: 0;
     outline: none;
+    position: absolute;
+    left: 1rem;
 }
 
 .hamburger-line {
@@ -4908,160 +4910,149 @@ table th, table td {
     transform: translateY(-12px) rotate(-45deg);
 }
 
+/* Navigation Styles for all screens */
+/* Hide navigation by default */
+.nav-links {
+    position: fixed;
+    top: 70px;
+    left: -100%;
+    width: 280px;
+    height: calc(100vh - 70px);
+    background: var(--card-bg);
+    flex-direction: column;
+    padding: 2rem 0;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    z-index: 1000;
+    border-right: 2px solid var(--primary-color);
+}
+
+/* Show navigation when active */
+.nav-links.active {
+    left: 0;
+}
+
+/* Navigation menu items - Applied to all screens */
+.nav-links li {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li a {
+    display: block;
+    width: 100%;
+    padding: 1rem 2rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.nav-links li a:hover {
+    background: var(--primary-color);
+    color: white;
+    padding-left: 2.5rem;
+}
+
+/* Theme toggle in menu */
+.nav-links li .theme-toggle {
+    margin: 1rem 2rem;
+}
+
+/* Admin link styling */
+.nav-links .admin-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: bold;
+}
+
+/* Logout item - positioned at bottom */
+.nav-links .logout-item {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
+}
+
+/* Logout link styling */
+.nav-links .logout-link {
+    color: #e74c3c !important;
+    font-weight: 600 !important;
+    border-bottom: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.4rem !important;
+    border: 2px solid #e74c3c !important;
+    border-radius: 5px !important;
+    padding: 0.45rem 0.6rem !important;
+    margin: 0 1rem !important;
+    font-size: 0.8rem !important;
+    max-width: 90% !important;
+}
+
+.nav-links .logout-text {
+    white-space: nowrap;
+}
+
+.nav-links .logout-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.nav-links .logout-link:hover {
+    background: #e74c3c !important;
+    color: white !important;
+}
+
+.nav-links .logout-link:hover .logout-text small {
+    opacity: 1;
+}
+
+/* Navbar container adjustments */
+.navbar .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.navbar .logo {
+    text-align: center;
+}
+
 /* Mobile Navigation Styles */
 @media screen and (max-width: 768px) {
-    /* Show hamburger button on mobile */
-    .hamburger-menu {
-        display: flex !important;
-    }
-
-    /* Hide navigation by default on mobile */
-    .nav-links {
-        position: fixed;
-        top: 70px;
-        left: -100%;
-        width: 280px;
-        height: calc(100vh - 70px);
-        background: var(--card-bg);
-        flex-direction: column;
-        padding: 2rem 0;
-        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
-        transition: left 0.3s ease;
-        overflow-y: auto;
-        z-index: 1000;
-        border-right: 2px solid var(--primary-color);
-    }
-
-    /* Show navigation when active */
-    .nav-links.active {
-        left: 0;
-    }
-
-    .nav-links li {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-
-    .nav-links li a {
-        display: block;
-        width: 100%;
-        padding: 1rem 2rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border-color);
-        transition: all 0.3s ease;
-    }
-
-    .nav-links li a:hover {
-        background: var(--primary-color);
-        color: white;
-        padding-left: 2.5rem;
-    }
-
-    /* Theme toggle in mobile menu */
-    .nav-links li .theme-toggle {
-        margin: 1rem 2rem;
-    }
-
-    /* Admin link styling in mobile */
-    .nav-links .admin-link {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        font-weight: bold;
-    }
-
-    /* Logout item - positioned at bottom */
-    .nav-links .logout-item {
-        margin-top: auto;
-        padding-top: 1.5rem;
-        border-top: 2px solid var(--border-color);
-    }
-
-    /* Logout link styling in mobile */
-    .nav-links .logout-link {
-        color: #e74c3c !important;
-        font-weight: 600 !important;
-        border-bottom: none !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0.4rem !important;
-        border: 2px solid #e74c3c !important;
-        border-radius: 5px !important;
-        padding: 0.45rem 0.6rem !important;
-        margin: 0 1rem !important;
-        font-size: 0.8rem !important;
-        max-width: 90% !important;
-    }
-
-    .nav-links .logout-text {
-        white-space: nowrap;
-    }
-
-    .nav-links .logout-icon {
-        font-size: 1rem;
-        flex-shrink: 0;
-    }
-
-    .nav-links .logout-link:hover {
-        background: #e74c3c !important;
-        color: white !important;
-    }
-
-    .nav-links .logout-link:hover .logout-text small {
-        opacity: 1;
-    }
-
-    /* Navbar container adjustments */
-    .navbar .container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: relative;
-    }
-
-    .navbar .hamburger-menu {
-        position: absolute;
-        left: 1rem;
-    }
-
-    .navbar .logo {
-        text-align: center;
-    }
 }
 
-/* Overlay cuando el menú está abierto */
-@media screen and (max-width: 768px) {
-    .nav-links.active::before {
-        content: '';
-        position: fixed;
-        top: 70px;
-        right: 0;
-        width: calc(100vw - 280px);
-        height: calc(100vh - 70px);
-        background: rgba(0, 0, 0, 0.5);
-        z-index: -1;
-    }
+/* Overlay cuando el menú está abierto - All screens */
+.nav-links.active::before {
+    content: '';
+    position: fixed;
+    top: 70px;
+    right: 0;
+    width: calc(100vw - 280px);
+    height: calc(100vh - 70px);
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
 }
 
-/* Smooth scrolling for mobile menu */
-@media screen and (max-width: 768px) {
-    .nav-links {
-        -webkit-overflow-scrolling: touch;
-    }
+/* Smooth scrolling for menu - All screens */
+.nav-links {
+    -webkit-overflow-scrolling: touch;
+}
 
-    .nav-links::-webkit-scrollbar {
-        width: 6px;
-    }
+.nav-links::-webkit-scrollbar {
+    width: 6px;
+}
 
-    .nav-links::-webkit-scrollbar-track {
-        background: var(--card-bg);
-    }
+.nav-links::-webkit-scrollbar-track {
+    background: var(--card-bg);
+}
 
-    .nav-links::-webkit-scrollbar-thumb {
-        background: var(--primary-color);
-        border-radius: 3px;
-    }
+.nav-links::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
 }
 
 /* Small mobile adjustments */
@@ -5080,9 +5071,4 @@ table th, table td {
     }
 }
 
-/* Hide hamburger menu on desktop */
-@media screen and (min-width: 769px) {
-    .hamburger-menu {
-        display: none;
-    }
-}
+/* Hamburger menu now visible on all screen sizes */
