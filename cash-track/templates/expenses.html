@@ -139,7 +139,7 @@
 
     <div class="table-card">
         <div class="table-header">
-            <h3>Listado de Gastos</h3>
+            <h3>💸 Listado de Gastos</h3>
             <div class="bulk-actions" id="bulkActions" style="display: none;">
                 <span id="selectedCount">0 seleccionados</span>
                 <button type="button" class="btn btn-danger" onclick="deleteSelected()">
@@ -147,59 +147,76 @@
                 </button>
             </div>
         </div>
+
         {% if expenses %}
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th style="width: 50px;">
-                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" title="Seleccionar todos">
-                    </th>
-                    <th>Fecha</th>
-                    <th>Categoría</th>
-                    <th>Descripción</th>
-                    <th>Cuotas</th>
-                    <th>Medio de Pago</th>
-                    <th>Monto</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for expense in expenses %}
-                <tr>
-                    <td>
-                        <input type="checkbox" class="expense-checkbox" value="{{ expense.id }}" onchange="updateBulkActions()">
-                    </td>
-                    <td>{{ expense.date }}</td>
-                    <td>{{ expense.category }}</td>
-                    <td>{{ expense.description }}</td>
-                    <td>
-                        {% if expense.installment_number %}
-                            <span style="background: #667eea; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
-                                {{ expense.installment_number }}
-                            </span>
-                        {% else %}
-                            <span style="color: #9ca3af;">-</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ expense.payment_method }}</td>
-                    <td>
-                        <span style="font-weight: 600;">
+        <!-- Select all checkbox -->
+        <div style="padding: 10px 15px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" title="Seleccionar todos">
+                <span style="font-size: 0.9rem; color: var(--text-muted);">Seleccionar todos</span>
+            </label>
+        </div>
+
+        <div class="transaction-list">
+            {% for expense in expenses %}
+            <div class="transaction-item expense-item" style="position: relative;">
+                <!-- Checkbox en esquina superior izquierda -->
+                <div style="position: absolute; top: 10px; left: 10px; z-index: 10;">
+                    <input type="checkbox" class="expense-checkbox" value="{{ expense.id }}" onchange="updateBulkActions()">
+                </div>
+
+                <div class="transaction-icon">
+                    {% if expense.category == 'Alimentación' %}🍽️
+                    {% elif expense.category == 'Transporte' %}🚗
+                    {% elif expense.category == 'Salud' %}⚕️
+                    {% elif expense.category == 'Entretenimiento' %}🎉
+                    {% elif expense.category == 'Servicios' %}🏠
+                    {% elif expense.category == 'Educación' %}📚
+                    {% elif expense.category == 'Ropa' %}👕
+                    {% elif expense.category == 'Tecnología' %}💻
+                    {% elif expense.category == 'Hogar' %}🏡
+                    {% elif expense.category == 'Otros' %}📦
+                    {% else %}📦
+                    {% endif %}
+                </div>
+
+                <div class="transaction-details" style="flex: 1;">
+                    <div class="transaction-header">
+                        <span class="transaction-description">{{ expense.description }}</span>
+                        <span class="transaction-amount expense-amount {% if expense.currency == 'USD' %}usd-amount{% endif %}">
                             {% if expense.currency == 'USD' %}
-                                <span style="color: #10b981;">USD ${{ "%.2f"|format(expense.amount) }}</span>
+                                -US${{ "{:,.0f}".format(expense.amount) }}
                             {% else %}
-                                ${{ "%.2f"|format(expense.amount) }}
+                                -${{ "{:,.0f}".format(expense.amount) }}
                             {% endif %}
                         </span>
-                    </td>
-                    <td>
-                        <form method="POST" action="{{ url_for('expenses.delete_expense', expense_id=expense.id) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este gasto?')">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    </div>
+                    <div class="transaction-meta">
+                        <span class="transaction-category">{{ expense.category }}</span>
+                        <span class="transaction-separator">•</span>
+                        <span class="transaction-date">{{ expense.date }}</span>
+                        {% if expense.installment_number %}
+                        <span class="transaction-separator">•</span>
+                        <span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+                            {{ expense.installment_number }}
+                        </span>
+                        {% endif %}
+                        {% if expense.payment_method %}
+                        <span class="transaction-separator">•</span>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">{{ expense.payment_method }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Botón de eliminar -->
+                <div style="position: absolute; top: 10px; right: 10px;">
+                    <form method="POST" action="{{ url_for('expenses.delete_expense', expense_id=expense.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.8rem;" onclick="return confirm('¿Estás seguro de eliminar este gasto?')">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
         {% else %}
         <p class="no-data">No hay gastos registrados para este período</p>
         {% endif %}
