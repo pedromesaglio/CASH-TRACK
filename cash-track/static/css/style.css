@@ -4984,21 +4984,22 @@ table th, table td {
         border-bottom: none !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: space-between !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
         border: 2px solid #e74c3c !important;
         border-radius: 5px !important;
-        padding: 0.5rem 0.7rem !important;
-        margin: 0 0.5rem !important;
-        font-size: 0.85rem !important;
+        padding: 0.45rem 0.6rem !important;
+        margin: 0 1rem !important;
+        font-size: 0.8rem !important;
+        max-width: 90% !important;
     }
 
     .nav-links .logout-text {
-        flex: 1;
+        white-space: nowrap;
     }
 
     .nav-links .logout-icon {
-        font-size: 1.1rem;
-        margin-left: 0.5rem;
+        font-size: 1rem;
         flex-shrink: 0;
     }
 
