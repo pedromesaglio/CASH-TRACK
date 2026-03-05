@@ -5272,3 +5272,19 @@ table th, table td {
         border-radius: 0 !important;
     }
 }
+
+/* Desktop: Better spacing for expense cards */
+@media screen and (min-width: 769px) {
+    .transaction-item {
+        padding-right: 80px; /* Add extra padding on right to make space for delete button */
+    }
+    
+    .transaction-header {
+        gap: 40px; /* Increase gap between description and amount */
+    }
+    
+    .transaction-amount {
+        margin-right: 20px; /* Move amount away from delete button */
+        flex-shrink: 0; /* Prevent amount from shrinking */
+    }
+}
