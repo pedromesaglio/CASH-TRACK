@@ -4484,22 +4484,22 @@ table th, table td {
         background: var(--card-bg);
     }
 
-    /* Stats grid en móvil - 1 columna */
+    /* Stats grid en móvil - 2 columnas (mantener estética) */
     .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
 
     .stat-card {
-        padding: 15px;
+        padding: 10px;
     }
 
     .stat-card h3 {
-        font-size: 0.9rem;
+        font-size: 0.7rem;
     }
 
     .stat-card .amount {
-        font-size: 1.5rem;
+        font-size: 1.1rem;
     }
 
     /* Tablas responsivas */
@@ -4721,12 +4721,14 @@ table th, table td {
     }
 
     .categories-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
 
     .category-card {
-        padding: 15px;
+        padding: 10px;
         text-align: center;
+        font-size: 0.85rem;
     }
 
     .nav-links a {
