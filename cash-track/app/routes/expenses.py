@@ -53,35 +53,22 @@ def expenses():
 
     user_id = session['user_id']
 
-    # Get filter parameters
-    # If no filter is specified, try to find the most recent month with data
+    # Get filter parameters - default to current month if not provided
     year = request.args.get('year', type=int)
     month = request.args.get('month', type=int)
 
-    if year is None or month is None:
-        # Find most recent month with expenses
-        cursor.execute('''
-            SELECT EXTRACT(YEAR FROM date)::text as year, TO_CHAR(date, 'MM') as month
-            FROM expenses
-            WHERE user_id = %s
-            ORDER BY date DESC
-            LIMIT 1
-        ''', (user_id,))
+    # If no filter provided, use current month
+    if year is None:
+        year = datetime.now().year
+    if month is None:
+        month = datetime.now().month
 
-        recent = cursor.fetchone()
-        if recent:
-            year = int(recent['year']) if year is None else year
-            month = int(recent['month']) if month is None else month
-        else:
-            # No data, use current month
-            year = datetime.now().year if year is None else year
-            month = datetime.now().month if month is None else month
-
+    # Always filter by the selected month and year
     cursor.execute('''
         SELECT * FROM expenses
-        WHERE user_id = %s AND EXTRACT(YEAR FROM date)::text = %s AND TO_CHAR(date, 'MM') = %s
+        WHERE user_id = %s AND EXTRACT(YEAR FROM date) = %s AND EXTRACT(MONTH FROM date) = %s
         ORDER BY date DESC, created_at DESC
-    ''', (user_id, str(year), f'{month:02d}'))
+    ''', (user_id, year, month))
     all_expenses = cursor.fetchall()
 
     # Get custom categories for management (before closing connection)
