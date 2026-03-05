@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AurefiQ{% endblock %}</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260305d">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260305e">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
     <nav class="navbar">
@@ -308,6 +309,23 @@
     {% endif %}
 
     <script>
+        // CSRF Token Setup for AJAX requests
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Override fetch to include CSRF token automatically
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options = {}) {
+            if (options.method && options.method.toUpperCase() !== 'GET') {
+                options.headers = options.headers || {};
+                if (typeof options.headers === 'object' && !(options.headers instanceof Headers)) {
+                    options.headers['X-CSRFToken'] = csrfToken;
+                } else if (options.headers instanceof Headers) {
+                    options.headers.append('X-CSRFToken', csrfToken);
+                }
+            }
+            return originalFetch(url, options);
+        };
+
         // Dark Mode Toggle Script
         function toggleTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');

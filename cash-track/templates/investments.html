@@ -28,6 +28,7 @@
     <div class="form-card">
         <h3>💎 Agregar Nueva Inversión</h3>
         <form method="POST" class="quick-investment-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label>🏦 Plataforma de Inversión</label>
                 <div class="platform-grid">
@@ -177,6 +178,7 @@
 
         <div class="binance-actions-footer">
             <form method="POST" action="{{ url_for('binance.sync_binance_to_investments') }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-success">
                     🔄 Sincronizar con Inversiones
                 </button>
@@ -192,6 +194,7 @@
         <div class="section-header">
             <h3>Listado de Inversiones</h3>
             <form method="POST" action="{{ url_for('investments.update_investment_prices') }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-success">
                     🔄 Actualizar Precios en Tiempo Real
                 </button>
@@ -226,6 +229,7 @@
                     <td>{{ inv.notes or '-' }}</td>
                     <td>
                         <form method="POST" action="{{ url_for('investments.delete_investment', investment_id=inv.id) }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar esta inversión?')">Eliminar</button>
                         </form>
                     </td>

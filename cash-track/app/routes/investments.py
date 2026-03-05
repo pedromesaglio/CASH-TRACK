@@ -17,26 +17,59 @@ investments_bp = Blueprint('investments', __name__)
 def investments():
     """Manage investments"""
     if request.method == 'POST':
-        date = request.form['date']
-        inv_type = request.form['type']
-        name = request.form['name']
-        amount = float(request.form['amount'])
-        current_value = request.form.get('current_value')
-        if current_value:
-            current_value = float(current_value)
-        notes = request.form.get('notes', '')
+        try:
+            # Validate and sanitize inputs
+            date = request.form.get('date', '').strip()
+            inv_type = request.form.get('type', '').strip()
+            name = request.form.get('name', '').strip()
+            amount_str = request.form.get('amount', '').strip()
+            current_value_str = request.form.get('current_value', '').strip()
+            notes = request.form.get('notes', '').strip()
 
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO investments (user_id, date, type, name, amount, current_value, notes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        ''', (session['user_id'], date, inv_type, name, amount, current_value, notes))
-        conn.commit()
-        conn.close()
+            # Validate required fields
+            if not all([date, inv_type, name, amount_str]):
+                flash('Los campos fecha, tipo, nombre y monto son requeridos', 'danger')
+                return redirect(url_for('investments.investments'))
 
-        flash('Inversión agregada exitosamente', 'success')
-        return redirect(url_for('investments.investments'))
+            # Validate amount is a positive number
+            try:
+                amount = float(amount_str)
+                if amount <= 0:
+                    raise ValueError("El monto debe ser mayor a cero")
+            except ValueError as ve:
+                flash(f'Monto inválido: {str(ve)}', 'danger')
+                return redirect(url_for('investments.investments'))
+
+            # Validate current_value if provided
+            current_value = None
+            if current_value_str:
+                try:
+                    current_value = float(current_value_str)
+                    if current_value < 0:
+                        raise ValueError("El valor actual no puede ser negativo")
+                except ValueError as ve:
+                    flash(f'Valor actual inválido: {str(ve)}', 'danger')
+                    return redirect(url_for('investments.investments'))
+
+            # Validate name length
+            if len(name) > 100:
+                flash('El nombre es demasiado largo (máximo 100 caracteres)', 'danger')
+                return redirect(url_for('investments.investments'))
+
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO investments (user_id, date, type, name, amount, current_value, notes)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ''', (session['user_id'], date, inv_type, name, amount, current_value, notes))
+            conn.commit()
+            conn.close()
+
+            flash('Inversión agregada exitosamente', 'success')
+            return redirect(url_for('investments.investments'))
+        except Exception as e:
+            flash(f'Error al agregar inversión: {str(e)}', 'danger')
+            return redirect(url_for('investments.investments'))
 
     # GET request - show form and list
     conn = get_db()

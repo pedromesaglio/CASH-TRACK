@@ -52,6 +52,7 @@
                         <div class="action-buttons">
                             {% if user.id != session.user_id %}
                             <form method="POST" action="{{ url_for('admin_change_role', user_id=user.id) }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="role" value="{% if user.role == 'admin' %}user{% else %}admin{% endif %}">
                                 <button type="submit" class="btn-action btn-role" title="Cambiar rol">
                                     {% if user.role == 'admin' %}⬇️{% else %}⬆️{% endif %}
@@ -60,6 +61,7 @@
                             <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}"
                                   onsubmit="return confirm('¿Estás seguro de eliminar este usuario y todos sus datos?')"
                                   style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn-action btn-delete" title="Eliminar usuario">🗑️</button>
                             </form>
                             {% else %}

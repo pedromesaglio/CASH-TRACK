@@ -3,6 +3,7 @@ Application Factory
 Creates and configures the Flask application
 """
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 import os
 from dotenv import load_dotenv
 
@@ -22,6 +23,11 @@ def create_app(config_name=None):
     # Load configuration
     # Try FLASK_SECRET_KEY first (Railway-compatible), then SECRET_KEY, then fallback
     app.secret_key = os.getenv('FLASK_SECRET_KEY') or os.getenv('SECRET_KEY', 'dev-secret-key-change-this-in-production')
+
+    # CSRF Protection
+    app.config['WTF_CSRF_ENABLED'] = True
+    app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for now (improve UX)
+    csrf = CSRFProtect(app)
 
     # Security headers
     @app.after_request

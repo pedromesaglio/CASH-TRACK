@@ -25,12 +25,37 @@ def expenses():
     """Manage expenses"""
     if request.method == 'POST':
         try:
-            date = request.form['date']
-            category = request.form['category']
-            description = request.form['description']
-            payment_method = request.form['payment_method']
-            amount = float(request.form['amount'])
-            currency = request.form.get('currency', 'ARS')  # Default to ARS if not provided
+            # Validate and sanitize inputs
+            date = request.form.get('date', '').strip()
+            category = request.form.get('category', '').strip()
+            description = request.form.get('description', '').strip()
+            payment_method = request.form.get('payment_method', '').strip()
+            amount_str = request.form.get('amount', '').strip()
+            currency = request.form.get('currency', 'ARS').strip()
+
+            # Validate required fields
+            if not all([date, category, description, payment_method, amount_str]):
+                flash('Todos los campos son requeridos', 'danger')
+                return redirect(url_for('expenses.expenses'))
+
+            # Validate amount is a positive number
+            try:
+                amount = float(amount_str)
+                if amount <= 0:
+                    raise ValueError("El monto debe ser mayor a cero")
+            except ValueError as ve:
+                flash(f'Monto inválido: {str(ve)}', 'danger')
+                return redirect(url_for('expenses.expenses'))
+
+            # Validate currency
+            if currency not in ['ARS', 'USD']:
+                flash('Moneda inválida', 'danger')
+                return redirect(url_for('expenses.expenses'))
+
+            # Validate description length
+            if len(description) > 200:
+                flash('La descripción es demasiado larga (máximo 200 caracteres)', 'danger')
+                return redirect(url_for('expenses.expenses'))
 
             conn = get_db()
             cursor = conn.cursor()

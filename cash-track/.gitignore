@@ -126,3 +126,14 @@ cashtrack_backup_*.db
 # Backup files
 *.backup
 app.py.backup
+
+# Utility scripts with credentials (keep local only)
+debug_users.py
+init_railway_db.py
+reset_passwords.py
+verify_railway_data.py
+fix_sequences.py
+fix_missing_columns.py
+add_currency_column.py
+update_symbols.py
+*_railway*.py

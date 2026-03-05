@@ -50,6 +50,7 @@
         <div class="button-group">
             <button onclick="toggleUpdateForm()" class="btn btn-warning">🔄 Actualizar Credenciales</button>
             <form method="POST" action="{{ url_for('delete_binance_credentials') }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de eliminar tus credenciales de Binance?')">
                     🗑️ Eliminar Credenciales
                 </button>
@@ -64,6 +65,7 @@
     {% endif %}
         <h3>🔑 Configurar API Keys</h3>
         <form method="POST" action="{{ url_for('save_binance_credentials') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="api_key">🔐 API Key</label>
                 <input type="text" id="api_key" name="api_key" required

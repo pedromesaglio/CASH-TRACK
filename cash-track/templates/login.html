@@ -35,6 +35,7 @@
         <h2 class="auth-title">Bienvenido de nuevo</h2>
 
         <form method="POST" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="username">
                     <svg class="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -34,6 +34,7 @@
     <div class="form-card quick-expense-form">
         <h3>💸 Agregar Gasto Rápido</h3>
         <form method="POST" id="expenseForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- Categorías con iconos -->
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -123,6 +124,7 @@
             Sube el PDF de tu resumen de tarjeta y la IA extraerá automáticamente todos los gastos
         </p>
         <form method="POST" action="{{ url_for('expenses.upload_expenses_pdf') }}" enctype="multipart/form-data" id="pdfUploadForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="pdf_file">📎 Seleccionar PDF</label>
                 <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" required
@@ -211,6 +213,7 @@
                 <!-- Botón de eliminar -->
                 <div style="position: absolute; top: 10px; right: 10px;">
                     <form method="POST" action="{{ url_for('expenses.delete_expense', expense_id=expense.id) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.8rem;" onclick="return confirm('¿Estás seguro de eliminar este gasto?')">🗑️</button>
                     </form>
                 </div>
@@ -252,6 +255,7 @@
                 <div style="margin-bottom: 30px;">
                     <h4 style="margin-bottom: 16px; color: var(--dark); font-size: 1.1rem;">➕ Agregar Nueva Categoría</h4>
                     <form method="POST" action="{{ url_for('expenses.add_category') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="form-group">
                             <label for="category_name">📝 Nombre de la Categoría</label>
                             <input type="text" id="category_name" name="category_name" required placeholder="Ej: Mascotas, Viajes, etc.">
@@ -279,6 +283,7 @@
                                 <span style="font-weight: 700; color: var(--dark);">{{ cat.name }}</span>
                             </div>
                             <form method="POST" action="{{ url_for('expenses.delete_category', category_id=cat.id) }}" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn-delete-category" onclick="return confirm('¿Estás seguro de eliminar la categoría {{ cat.name }}?')">
                                     🗑️
                                 </button>

@@ -63,6 +63,7 @@
         <h3>📥 Importar a Inversiones</h3>
         <p>¿Querés sincronizar estos balances con tu portafolio de inversiones?</p>
         <form method="POST" action="{{ url_for('binance.sync_binance_to_investments') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-success btn-large">
                 🔄 Sincronizar con Inversiones
             </button>
