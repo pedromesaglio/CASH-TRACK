@@ -24,24 +24,28 @@ expenses_bp = Blueprint('expenses', __name__)
 def expenses():
     """Manage expenses"""
     if request.method == 'POST':
-        date = request.form['date']
-        category = request.form['category']
-        description = request.form['description']
-        payment_method = request.form['payment_method']
-        amount = float(request.form['amount'])
-        currency = request.form.get('currency', 'ARS')  # Default to ARS if not provided
+        try:
+            date = request.form['date']
+            category = request.form['category']
+            description = request.form['description']
+            payment_method = request.form['payment_method']
+            amount = float(request.form['amount'])
+            currency = request.form.get('currency', 'ARS')  # Default to ARS if not provided
 
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO expenses (user_id, date, category, description, payment_method, amount, currency)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        ''', (session['user_id'], date, category, description, payment_method, amount, currency))
-        conn.commit()
-        conn.close()
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO expenses (user_id, date, category, description, payment_method, amount, currency)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ''', (session['user_id'], date, category, description, payment_method, amount, currency))
+            conn.commit()
+            conn.close()
 
-        flash('Gasto agregado exitosamente', 'success')
-        return redirect(url_for('expenses.expenses'))
+            flash('Gasto agregado exitosamente', 'success')
+            return redirect(url_for('expenses.expenses'))
+        except Exception as e:
+            flash(f'Error al agregar gasto: {str(e)}', 'danger')
+            return redirect(url_for('expenses.expenses'))
 
     # GET request - show form and list
     conn = get_db()
