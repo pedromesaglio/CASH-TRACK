@@ -4484,22 +4484,29 @@ table th, table td {
         background: var(--card-bg);
     }
 
-    /* Stats grid en móvil - 2 columnas (mantener estética) */
+    /* Stats grid en móvil - 4 columnas (mantener estética desktop) */
     .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
     }
 
     .stat-card {
-        padding: 10px;
+        padding: 8px 4px;
     }
 
     .stat-card h3 {
-        font-size: 0.7rem;
+        font-size: 0.55rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .stat-card .amount {
-        font-size: 1.1rem;
+        font-size: 0.9rem;
+    }
+
+    .stat-card .change {
+        font-size: 0.65rem;
     }
 
     /* Tablas responsivas */
