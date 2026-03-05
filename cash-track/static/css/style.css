@@ -5238,3 +5238,37 @@ table th, table td {
 }
 
 /* Hamburger menu now visible on all screen sizes */
+
+/* MOBILE TABLE LAYOUT - FINAL OVERRIDE (max-width: 768px) */
+@media screen and (max-width: 768px) {
+    /* Force table layout instead of cards */
+    .data-table {
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
+        background: transparent !important;
+    }
+
+    .data-table tbody tr {
+        background: rgba(30, 30, 50, 0.3) !important;
+        border-radius: 0 !important;
+        margin-bottom: 0 !important;
+        box-shadow: none !important;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.2) !important;
+        transform: none !important;
+    }
+
+    .data-table tbody tr::before {
+        display: none !important;
+    }
+
+    .data-table tbody tr:hover {
+        background: rgba(40, 40, 65, 0.4) !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .data-table td:first-child,
+    .data-table td:last-child {
+        border-radius: 0 !important;
+    }
+}
