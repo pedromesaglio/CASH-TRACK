@@ -1789,6 +1789,12 @@ body {
         gap: 5px;
     }
 
+    /* Reduce Nueva Categoría button size on mobile */
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+
     .dashboard,
     .page-container {
         padding: 24px;
