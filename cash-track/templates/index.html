@@ -25,7 +25,7 @@
                     {% endfor %}
                 </select>
                 <button type="submit" class="btn btn-secondary">Filtrar</button>
-                <a href="{{ url_for('expenses.export_csv', year=year, month=month) }}" class="btn btn-success">Exportar CSV</a>
+                <a href="{{ url_for('expenses.export_csv', year=year, month=month) }}" class="btn btn-success">Exportar resumen de gastos</a>
             </form>
         </div>
     </div>
