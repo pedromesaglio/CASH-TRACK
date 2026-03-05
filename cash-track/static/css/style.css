@@ -1797,13 +1797,23 @@ body {
 
     /* Make expense cards much more compact and full width on mobile */
     .table-card {
-        padding: 16px 12px !important;
+        padding: 12px 8px !important;
         margin-bottom: 20px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
     .table-card h3 {
         font-size: 1.1rem !important;
         margin-bottom: 12px !important;
+        padding-left: 8px !important;
+    }
+
+    /* Make table rows full width */
+    .data-table tbody tr {
+        display: table-row !important;
+        width: 100% !important;
+        border-radius: 8px !important;
     }
 
     .data-table th {
