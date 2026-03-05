@@ -1795,6 +1795,34 @@ body {
         font-size: 0.75rem;
     }
 
+    /* Reduce expense table size on mobile */
+    .data-table th {
+        padding: 10px 8px;
+        font-size: 0.65rem;
+    }
+
+    .data-table td {
+        padding: 10px 8px;
+        font-size: 0.75rem;
+    }
+
+    .data-table tbody tr {
+        margin-bottom: 6px;
+    }
+
+    .data-table th:first-child,
+    .data-table td:first-child {
+        width: 35px !important;
+        min-width: 35px !important;
+        max-width: 35px !important;
+        padding: 8px !important;
+    }
+
+    .data-table input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+    }
+
     .dashboard,
     .page-container {
         padding: 24px;
@@ -1806,15 +1834,6 @@ body {
 
     .card .amount {
         font-size: 2rem;
-    }
-
-    .data-table {
-        font-size: 0.85rem;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 10px;
     }
 }
 
