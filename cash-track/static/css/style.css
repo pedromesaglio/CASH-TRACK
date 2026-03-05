@@ -4480,29 +4480,32 @@ table th, table td {
 
 /* Móviles y tablets pequeñas (max-width: 768px) */
 @media screen and (max-width: 768px) {
-    /* Navegación móvil */
+    /* Navegación móvil - Reducida */
     .navbar {
-        padding: 10px 0;
+        padding: 8px 0;
+        margin-bottom: 15px;
     }
 
     .navbar .container {
-        flex-direction: column;
-        gap: 15px;
+        flex-direction: row;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
     }
 
     .logo {
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        gap: 5px;
+        gap: 8px;
     }
 
     .logo h1 {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
 
     .logo-img {
-        width: 40px;
-        height: 40px;
+        width: 32px;
+        height: 32px;
     }
 
     .nav-links {
