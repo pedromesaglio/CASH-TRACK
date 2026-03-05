@@ -41,7 +41,7 @@
                     </div>
                 </li>
                 <li class="logout-item">
-                    <a href="{{ url_for('auth.logout') }}" class="logout-link">
+                    <a href="{{ url_for('auth.logout') }}" class="logout-link" onclick="return confirmLogout()">
                         <span class="logout-text">Cerrar Sesión</span>
                         <span class="logout-icon">👤</span>
                     </a>
@@ -330,6 +330,11 @@
 
             navMenu.classList.toggle('active');
             hamburger.classList.toggle('active');
+        }
+
+        // Logout Confirmation
+        function confirmLogout() {
+            return confirm('¿Estás seguro que deseas cerrar sesión?');
         }
 
         // Close mobile menu when clicking on a link
