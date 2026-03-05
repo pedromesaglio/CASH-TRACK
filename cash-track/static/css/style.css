@@ -1740,24 +1740,46 @@ body {
     }
 
     .summary-cards {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 
     .summary-cards .card {
-        padding: 10px 6px;
+        padding: 15px 10px;
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
     .summary-cards .card h3 {
-        font-size: 0.6rem;
+        font-size: 0.75rem;
     }
 
     .summary-cards .card .amount {
-        font-size: 0.95rem;
+        font-size: 1.1rem;
+        margin: 10px 0;
     }
 
     .summary-cards .card .card-change {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
+    }
+
+    /* Reorder cards for mobile: Total Ingresos, Balance, Gastos ARS, Gastos USD */
+    .summary-cards .card-income {
+        order: 1;
+    }
+
+    .summary-cards .card-balance {
+        order: 2;
+    }
+
+    .summary-cards .card-expense:nth-of-type(2) {
+        order: 3;
+    }
+
+    .summary-cards .card-expense:nth-of-type(3) {
+        order: 4;
     }
 
     .dashboard,
