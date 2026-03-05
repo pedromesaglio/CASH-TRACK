@@ -1797,7 +1797,7 @@ body {
 
     /* Make expense cards much more compact and full width on mobile */
     .table-card {
-        padding: 12px 8px !important;
+        padding: 12px 6px !important;
         margin-bottom: 20px !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
@@ -1806,14 +1806,13 @@ body {
     .table-card h3 {
         font-size: 1.1rem !important;
         margin-bottom: 12px !important;
-        padding-left: 8px !important;
+        padding-left: 6px !important;
     }
 
-    /* Make table rows full width */
+    /* Make table rows stretch and maintain card design */
     .data-table tbody tr {
-        display: table-row !important;
-        width: 100% !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
+        margin-bottom: 8px !important;
     }
 
     .data-table th {
