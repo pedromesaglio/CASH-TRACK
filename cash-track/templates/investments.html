@@ -61,19 +61,38 @@
                     <input type="text" id="name" name="name" required placeholder="Ej: BTC, Acciones AAPL, Plazo Fijo...">
                 </div>
                 <div class="form-group">
-                    <label for="amount">💵 Monto Invertido (ARS)</label>
-                    <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00">
+                    <label for="date">📅 Fecha</label>
+                    <input type="date" id="date" name="date" required>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="current_value">📈 Valor Actual (ARS)</label>
+                    <label for="amount">💵 Monto Invertido</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>💱 Moneda</label>
+                    <div class="currency-selector">
+                        <label class="currency-option">
+                            <input type="radio" name="currency" value="ARS" checked>
+                            <span class="currency-label">💵 ARS</span>
+                        </label>
+                        <label class="currency-option">
+                            <input type="radio" name="currency" value="USD">
+                            <span class="currency-label usd-label">💵 USD</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="current_value">📈 Valor Actual (misma moneda)</label>
                     <input type="number" id="current_value" name="current_value" step="0.01" min="0" placeholder="Dejar vacío si es igual al invertido">
                 </div>
                 <div class="form-group">
-                    <label for="date">📅 Fecha</label>
-                    <input type="date" id="date" name="date" required>
+                    <!-- Spacer -->
                 </div>
             </div>
 
@@ -220,10 +239,26 @@
                     <td>{{ inv.date }}</td>
                     <td>{{ inv.type }}</td>
                     <td>{{ inv.name }}</td>
-                    <td>${{ "%.2f"|format(inv.amount) }}</td>
-                    <td>${{ "%.2f"|format(inv.current_value or inv.amount) }}</td>
+                    <td>
+                        {% if inv.currency == 'USD' %}
+                            <span style="color: #10b981; font-weight: 600;">US${{ "%.2f"|format(inv.amount) }}</span>
+                        {% else %}
+                            ${{ "%.2f"|format(inv.amount) }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if inv.currency == 'USD' %}
+                            <span style="color: #10b981; font-weight: 600;">US${{ "%.2f"|format(inv.current_value or inv.amount) }}</span>
+                        {% else %}
+                            ${{ "%.2f"|format(inv.current_value or inv.amount) }}
+                        {% endif %}
+                    </td>
                     <td class="{% if (inv.current_value or inv.amount) - inv.amount >= 0 %}profit-positive{% else %}profit-negative{% endif %}">
-                        ${{ "%.2f"|format((inv.current_value or inv.amount) - inv.amount) }}
+                        {% if inv.currency == 'USD' %}
+                            US${{ "%.2f"|format((inv.current_value or inv.amount) - inv.amount) }}
+                        {% else %}
+                            ${{ "%.2f"|format((inv.current_value or inv.amount) - inv.amount) }}
+                        {% endif %}
                         ({{ "%.1f"|format(((inv.current_value or inv.amount) - inv.amount) / inv.amount * 100) }}%)
                     </td>
                     <td>{{ inv.notes or '-' }}</td>

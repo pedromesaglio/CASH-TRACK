@@ -56,12 +56,17 @@ def investments():
                 flash('El nombre es demasiado largo (máximo 100 caracteres)', 'danger')
                 return redirect(url_for('investments.investments'))
 
+            # Get currency (default ARS)
+            currency = request.form.get('currency', 'ARS').strip()
+            if currency not in ['ARS', 'USD']:
+                currency = 'ARS'
+
             conn = get_db()
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO investments (user_id, date, type, name, amount, current_value, notes)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ''', (session['user_id'], date, inv_type, name, amount, current_value, notes))
+                INSERT INTO investments (user_id, date, type, name, amount, current_value, notes, currency)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (session['user_id'], date, inv_type, name, amount, current_value, notes, currency))
             conn.commit()
             conn.close()
 
