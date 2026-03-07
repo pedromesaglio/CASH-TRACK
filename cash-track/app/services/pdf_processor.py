@@ -114,30 +114,43 @@ Transacciones:
 {transactions_text}
 
 Formato de cada línea:
-FECHA DESCRIPCIÓN [C.XX/YY si tiene cuotas] NRO_CUPON MONTO [puede tener USD al final]
+FECHA DESCRIPCIÓN [C.XX/YY si tiene cuotas] [USD MONTO_USD] NRO_CUPON MONTO_PESOS [DÓLARES si es USD]
 
 Para CADA transacción extraé:
-- fecha: YYYY-MM-DD (año 2025 si dice "25", 2024 si dice "24")
-- description: comercio/descripción (limpio, sin números de cupón)
-- amount: monto NUMÉRICO del ÚLTIMO número antes de USD (si tiene) o último número de la línea
+- fecha: YYYY-MM-DD (año 2026 si dice "26", 2025 si dice "25", 2024 si dice "24")
+- description: comercio/descripción (limpio, sin números de cupón ni códigos)
+- amount: monto NUMÉRICO
   * Si el monto tiene formato "1.234,56" convertilo a 1234.56
   * Si es negativo (descuento/bonificación) devolvelo como positivo
   * NUNCA uses comas ni puntos como separadores de miles, solo punto decimal
-  * Ejemplos: "4.334,38" → 4334.38, "35.000,00" → 35000.00
-- currency: "USD" SOLO si la palabra "USD" aparece EXPLÍCITAMENTE en la línea. Si NO tiene "USD", es "ARS"
-- installment_number: "X/Y" desde "C.XX/YY", null si no tiene cuotas
+  * Ejemplos: "4.334,38" → 4334.38, "35.000,00" → 35000.00, "555,27" → 555.27
+- currency: Detectar moneda siguiendo estas reglas ESTRICTAS:
+  * Si aparece "USD" seguido de un número (ej: "USD 4,48" o "USD 555,27") → "USD" y usar ese monto
+  * Si NO aparece "USD" → "ARS" y usar el último número de la línea
+  * Monedas alternativas: "UYU" (pesos uruguayos) → convertir a "ARS" aproximado
+- installment_number: Extraer cuota ACTUAL de "C.XX/YY"
+  * "C.01/06" → "1/6" (primera cuota de 6)
+  * "C.03/03" → "3/3" (tercera cuota de 3)
+  * "C.06/06" → "6/6" (última cuota de 6)
+  * Si NO tiene "C.XX/YY" → null
 - category: Alimentación, Transporte, Salud, Entretenimiento, Servicios, Educación, Ropa, Otros
 - payment_method: "Tarjeta de Crédito"
 
-CRÍTICO SOBRE MONEDA:
-- Si ves "USD" en el texto → currency: "USD"
-- Si NO ves "USD" en el texto → currency: "ARS"
-- NO adivines la moneda por el monto o comercio
-- Ejemplo con USD: "15-Dic-25 OPENAI *CHATGPT in1SeRCUCUSD 20,00 473963 20,00" → currency: "USD", amount: 20.00
-- Ejemplo sin USD: "04-Dic-25 AUTOPISTAS DEL S 960004413131001 000001 4.334,38" → currency: "ARS", amount: 4334.38
+EJEMPLOS:
+1. "10-Feb-26 CAFETERIA DEL PUERTO USD 4,48 690556 4,48"
+   → {{"date":"2026-02-10","description":"CAFETERIA DEL PUERTO","amount":4.48,"currency":"USD","installment_number":null}}
+
+2. "29-Ago-25 SIETE CUMBRES C.06/06 234817 18.166,66"
+   → {{"date":"2025-08-29","description":"SIETE CUMBRES","amount":18166.66,"currency":"ARS","installment_number":"6/6"}}
+
+3. "13-Feb-26 MERPAGO*LAPLANCHETTA C.01/06 324080 9.400,00"
+   → {{"date":"2026-02-13","description":"MERPAGO*LAPLANCHETTA","amount":9400.00,"currency":"ARS","installment_number":"1/6"}}
+
+4. "05-Feb-26 AUTOPISTAS DEL S 960004413131001 000001 1.538,02"
+   → {{"date":"2026-02-05","description":"AUTOPISTAS DEL S","amount":1538.02,"currency":"ARS","installment_number":null}}
 
 Devolvé SOLO el JSON array sin texto adicional:
-[{{"date":"2025-12-04","description":"AUTOPISTAS DEL S","amount":4334.38,"currency":"ARS","category":"Transporte","payment_method":"Tarjeta de Crédito","installment_number":null}}]
+[{{"date":"2026-02-10","description":"CAFETERIA DEL PUERTO","amount":4.48,"currency":"USD","category":"Alimentación","payment_method":"Tarjeta de Crédito","installment_number":null}}]
 """
 
     try:
