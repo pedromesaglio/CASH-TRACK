@@ -9,8 +9,13 @@ from datetime import datetime
 import os
 from openai import OpenAI
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Initialize OpenAI client (lazy initialization to avoid issues)
+def get_openai_client():
+    """Get or create OpenAI client"""
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY not set")
+    return OpenAI(api_key=api_key)
 
 
 def extract_text_from_pdf(filepath):
@@ -147,6 +152,7 @@ IMPORTANTE:
 Devolvé SOLO el JSON array sin texto adicional:
 [{{"date":"2025-12-04","description":"SUPERMERCADO CARREFOUR","amount":4334.38,"currency":"ARS","category":"Alimentación","payment_method":"Tarjeta de Crédito","installment_number":null}}]"""
 
+        client = get_openai_client()
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[

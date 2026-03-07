@@ -5,8 +5,13 @@ from functools import wraps
 import os
 from openai import OpenAI
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Initialize OpenAI client (lazy initialization)
+def get_openai_client():
+    """Get or create OpenAI client"""
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY not set")
+    return OpenAI(api_key=api_key)
 
 # Create blueprint
 ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
@@ -88,6 +93,7 @@ Tus gastos por categoría:
             context += f"- {exp['date']}: {exp['description']} (${exp['amount']:,.2f}) - {exp['category']}\n"
 
         # Call OpenAI API
+        client = get_openai_client()
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
