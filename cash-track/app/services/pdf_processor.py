@@ -135,13 +135,22 @@ Para CADA transacción de consumo que encuentres, extraé:
 - date: YYYY-MM-DD (convertí cualquier formato: DD-MMM-YY, DD/MM/YYYY, etc.)
 - description: nombre del comercio/establecimiento (limpio, sin códigos ni números de cupón)
 - amount: monto como número decimal (ej: 1234.56)
+  * Si la línea tiene montos en MÚLTIPLES monedas (ej: "UYU 2.345,67 ... 234,56"), usá el ÚLTIMO monto (el convertido a la moneda principal)
   * Convertí "1.234,56" → 1234.56
   * Convertí "1,234.56" → 1234.56
   * Si es negativo o bonificación, hacelo positivo
-- currency: "USD" si ves USD/dolares/dólares/dollars explícitamente, sino "ARS"
+- currency:
+  * Si ves "USD" EXPLÍCITAMENTE en la línea → "USD"
+  * Si ves "UYU" (pesos uruguayos) seguido de un monto Y DESPUÉS hay otro monto en USD → "USD" (usá el monto convertido)
+  * En cualquier otro caso → "ARS"
 - installment_number: "X/Y" si tiene cuotas (ej: "cuota 3/6", "C.03/06" → "3/6"), null si no tiene
 - category: Alimentación, Transporte, Salud, Entretenimiento, Servicios, Educación, Ropa, Otros
 - payment_method: "Tarjeta de Crédito"
+
+CASOS ESPECIALES - PESOS URUGUAYOS (UYU):
+- Formato: "COMERCIO UYU 2.469,27 ... 234,56" significa que pagó UYU 2.469,27 que equivalen a USD 234.56
+- En este caso: amount = 234.56, currency = "USD"
+- SIEMPRE usá el monto convertido (el último de la línea) cuando veas UYU
 
 IMPORTANTE:
 - Ignorá totales, subtotales, saldos, intereses, impuestos, cargos financieros
