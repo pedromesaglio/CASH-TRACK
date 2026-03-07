@@ -180,7 +180,7 @@ def delete_expenses_bulk():
         cursor = conn.cursor()
 
         # Delete all selected expenses (only those belonging to the user)
-        placeholders = ','.join('%s' * len(expense_ids))
+        placeholders = ','.join(['%s'] * len(expense_ids))
         query = f'DELETE FROM expenses WHERE id IN ({placeholders}) AND user_id = %s'
         cursor.execute(query, (*expense_ids, session['user_id']))
 
