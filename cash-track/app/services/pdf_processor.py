@@ -131,26 +131,39 @@ Analizá CADA transacción de consumo en este texto y devolvé ÚNICAMENTE un JS
 TEXTO DEL RESUMEN:
 {transactions_text}
 
+FORMATO TÍPICO DE LÍNEA:
+DD-MMM-YY DESCRIPCION [MONEDA MONTO] [CUPÓN] MONTO_FINAL
+
+CASOS ESPECIALES - PESOS URUGUAYOS (UYU) - MUY IMPORTANTE:
+Cuando una línea contiene "UYU", el formato es:
+"DESCRIPCION  UYU  650,00  895542  16,90"
+         ↑          ↑       ↑       ↑
+    comercio   moneda UYU  cupón   ESTE ES EL MONTO CORRECTO EN USD
+
+REGLAS PARA UYU:
+1. Si ves "UYU" en la línea, la transacción es en DÓLARES (USD), NO en pesos argentinos
+2. El monto en UYU (ej: 650,00) NO es el monto final - ignoralo
+3. Buscá el número que está DESPUÉS del cupón de 6 dígitos - ese es el monto en USD
+4. Ejemplo: "PANADERIA BAIPA UYU 987,71 228504 25,68"
+   - NO uses 987.71
+   - SÍ usá 25.68
+   - currency = "USD"
+
 Para CADA transacción de consumo que encuentres, extraé:
 - date: YYYY-MM-DD (convertí cualquier formato: DD-MMM-YY, DD/MM/YYYY, etc.)
 - description: nombre del comercio/establecimiento (limpio, sin códigos ni números de cupón)
 - amount: monto como número decimal (ej: 1234.56)
-  * Si la línea tiene montos en MÚLTIPLES monedas (ej: "UYU 2.345,67 ... 234,56"), usá el ÚLTIMO monto (el convertido a la moneda principal)
   * Convertí "1.234,56" → 1234.56
   * Convertí "1,234.56" → 1234.56
   * Si es negativo o bonificación, hacelo positivo
+  * **PARA UYU: usá el número DESPUÉS del cupón de 6 dígitos, NO el número después de "UYU"**
 - currency:
-  * Si ves "USD" EXPLÍCITAMENTE en la línea → "USD"
-  * Si ves "UYU" (pesos uruguayos) seguido de un monto Y DESPUÉS hay otro monto en USD → "USD" (usá el monto convertido)
+  * Si la línea contiene "UYU" → "USD" (sí, USD, no ARS!)
+  * Si ves "USD" explícitamente → "USD"
   * En cualquier otro caso → "ARS"
 - installment_number: "X/Y" si tiene cuotas (ej: "cuota 3/6", "C.03/06" → "3/6"), null si no tiene
 - category: Alimentación, Transporte, Salud, Entretenimiento, Servicios, Educación, Ropa, Otros
 - payment_method: "Tarjeta de Crédito"
-
-CASOS ESPECIALES - PESOS URUGUAYOS (UYU):
-- Formato: "COMERCIO UYU 2.469,27 ... 234,56" significa que pagó UYU 2.469,27 que equivalen a USD 234.56
-- En este caso: amount = 234.56, currency = "USD"
-- SIEMPRE usá el monto convertido (el último de la línea) cuando veas UYU
 
 IMPORTANTE:
 - Ignorá totales, subtotales, saldos, intereses, impuestos, cargos financieros
