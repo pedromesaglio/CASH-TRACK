@@ -9,4 +9,4 @@ beautifulsoup4==4.12.2
 PyPDF2==3.0.1
 pdfplumber==0.10.3
 python-binance==1.0.19
-ollama==0.1.6
+openai==1.54.5

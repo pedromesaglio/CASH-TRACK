@@ -11,11 +11,22 @@ from openai import OpenAI
 
 # Initialize OpenAI client (lazy initialization to avoid issues)
 def get_openai_client():
-    """Get or create OpenAI client"""
+    """Get or create OpenAI client - compatible with both old and new versions"""
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set")
-    return OpenAI(api_key=api_key)
+
+    # Try new version first (without proxies parameter)
+    try:
+        return OpenAI(api_key=api_key)
+    except TypeError as e:
+        # If it fails due to proxies parameter, try old version
+        if 'proxies' in str(e):
+            # Old version compatibility - explicitly pass None for proxies
+            import inspect
+            if 'proxies' in inspect.signature(OpenAI.__init__).parameters:
+                return OpenAI(api_key=api_key, proxies=None)
+        raise
 
 
 def extract_text_from_pdf(filepath):
