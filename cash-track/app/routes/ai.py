@@ -2,7 +2,11 @@ from flask import Blueprint, jsonify, request, session
 from datetime import datetime
 from database import get_db
 from functools import wraps
-import ollama
+import os
+from openai import OpenAI
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Create blueprint
 ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
@@ -83,16 +87,18 @@ Tus gastos por categoría:
         for exp in recent_expenses:
             context += f"- {exp['date']}: {exp['description']} (${exp['amount']:,.2f}) - {exp['category']}\n"
 
-        # Call Ollama API
-        response = ollama.chat(
-            model='llama3.2',
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
             messages=[
-                {'role': 'system', 'content': context},
-                {'role': 'user', 'content': user_message}
-            ]
+                {"role": "system", "content": context},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=0.7,
+            max_tokens=1000
         )
 
-        ai_response = response['message']['content']
+        ai_response = response.choices[0].message.content
 
         return jsonify({
             'response': ai_response,

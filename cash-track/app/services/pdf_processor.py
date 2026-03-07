@@ -1,11 +1,16 @@
 """
 PDF processing service for extracting expenses from credit card statements
-Uses regex-based parsing - no AI/Ollama needed!
+Uses OpenAI GPT-4o-mini for intelligent parsing
 """
 import pdfplumber
 import re
 import json
 from datetime import datetime
+import os
+from openai import OpenAI
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 
 def extract_text_from_pdf(filepath):
@@ -107,12 +112,85 @@ def extract_consumption_lines(text, cardholder_name):
     return consumption_lines
 
 
+def parse_transactions_with_openai(transactions_text):
+    """
+    Parse transactions using OpenAI GPT-4o-mini - works with ANY credit card format
+    (BBVA, Santander, Galicia, Visa, Mastercard, American Express, etc.)
+    Returns list of expense dictionaries
+    """
+    try:
+        prompt = f"""Sos un experto en análisis de resúmenes de tarjetas de crédito de CUALQUIER banco argentino e internacional.
+
+Analizá CADA transacción de consumo en este texto y devolvé ÚNICAMENTE un JSON array.
+
+TEXTO DEL RESUMEN:
+{transactions_text}
+
+Para CADA transacción de consumo que encuentres, extraé:
+- date: YYYY-MM-DD (convertí cualquier formato: DD-MMM-YY, DD/MM/YYYY, etc.)
+- description: nombre del comercio/establecimiento (limpio, sin códigos ni números de cupón)
+- amount: monto como número decimal (ej: 1234.56)
+  * Convertí "1.234,56" → 1234.56
+  * Convertí "1,234.56" → 1234.56
+  * Si es negativo o bonificación, hacelo positivo
+- currency: "USD" si ves USD/dolares/dólares/dollars explícitamente, sino "ARS"
+- installment_number: "X/Y" si tiene cuotas (ej: "cuota 3/6", "C.03/06" → "3/6"), null si no tiene
+- category: Alimentación, Transporte, Salud, Entretenimiento, Servicios, Educación, Ropa, Otros
+- payment_method: "Tarjeta de Crédito"
+
+IMPORTANTE:
+- Ignorá totales, subtotales, saldos, intereses, impuestos, cargos financieros
+- Solo incluí transacciones de consumo reales en comercios
+- Si no estás seguro de algo, usá valores por defecto (ARS, Otros, null)
+- NO inventes datos
+
+Devolvé SOLO el JSON array sin texto adicional:
+[{{"date":"2025-12-04","description":"SUPERMERCADO CARREFOUR","amount":4334.38,"currency":"ARS","category":"Alimentación","payment_method":"Tarjeta de Crédito","installment_number":null}}]"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Sos un experto extrayendo transacciones de resúmenes de tarjetas. Devolvés SOLO JSON válido, nada más."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,
+            max_tokens=5000
+        )
+
+        ai_response = response.choices[0].message.content.strip()
+
+        # Remove markdown code blocks
+        ai_response = re.sub(r'```json\s*', '', ai_response)
+        ai_response = re.sub(r'```\s*', '', ai_response)
+        ai_response = ai_response.strip()
+
+        expenses = json.loads(ai_response)
+
+        # Validate and clean up
+        validated_expenses = []
+        for expense in expenses:
+            required_keys = ['date', 'description', 'amount', 'category', 'payment_method', 'currency']
+            if all(key in expense for key in required_keys):
+                # Ensure amount is float and positive
+                expense['amount'] = abs(float(expense['amount']))
+                expense['currency'] = expense['currency'].upper()
+                if 'installment_number' not in expense:
+                    expense['installment_number'] = None
+                validated_expenses.append(expense)
+
+        return validated_expenses
+
+    except Exception as e:
+        print(f"⚠️ OpenAI parsing failed: {e}. Falling back to regex...")
+        # Fallback to regex parsing if OpenAI fails
+        return parse_transactions_with_regex(transactions_text)
+
+
 def parse_transactions_with_regex(transactions_text):
     """
-    Parse transactions using regex patterns (no AI needed - works everywhere!)
+    Parse transactions using regex patterns (fallback when OpenAI fails)
+    Works only with BBVA format: DD-MMM-YY DESCRIPTION [C.XX/YY] [USD AMOUNT] COUPON FINAL_AMOUNT
     Returns list of expense dictionaries
-
-    Format: DD-MMM-YY DESCRIPTION [C.XX/YY] [USD AMOUNT] COUPON_NUMBER FINAL_AMOUNT
     """
     expenses = []
     lines = transactions_text.strip().split('\n')
@@ -272,7 +350,7 @@ def process_pdf_expenses(filepath, user_id, chunk_size=10):
             yield {'progress': progress, 'message': f'Procesando grupo {current_chunk} de {total_chunks}...'}
 
             transactions_text = '\n'.join(chunk)
-            chunk_expenses = parse_transactions_with_regex(transactions_text)
+            chunk_expenses = parse_transactions_with_openai(transactions_text)
             all_expenses.extend(chunk_expenses)
 
         # Step 4: Insert into database

@@ -14,7 +14,6 @@ from app.utils.decorators import login_required
 from app.utils.constants import PAYMENT_METHODS
 from app.services.category_service import get_all_categories, get_category_icons, get_custom_categories
 from app.services.pdf_processor import process_pdf_expenses
-import ollama
 
 expenses_bp = Blueprint('expenses', __name__)
 
@@ -209,39 +208,9 @@ def add_category():
         flash('El nombre de la categoría es requerido', 'danger')
         return redirect(url_for('expenses.expenses'))
 
-    # If no icon provided, use AI to suggest one
+    # If no icon provided, use default icon
     if not category_icon:
-        try:
-            prompt = f"""Para la categoría de gastos llamada "{category_name}", sugiere UN SOLO emoji que sea representativo y apropiado.
-
-Ejemplos:
-- "Viaje" → ✈️
-- "Mascotas" → 🐶
-- "Gimnasio" → 💪
-- "Café" → ☕
-- "Libros" → 📚
-- "Tecnología" → 💻
-
-Respondé ÚNICAMENTE con el emoji, sin texto adicional."""
-
-            response = ollama.chat(
-                model='llama3.2',
-                messages=[
-                    {'role': 'system', 'content': 'Eres un asistente que sugiere emojis apropiados para categorías de gastos. Respondes SOLO con un emoji, nada más.'},
-                    {'role': 'user', 'content': prompt}
-                ],
-                options={
-                    'temperature': 0.3,
-                    'num_predict': 10
-                }
-            )
-
-            suggested_icon = response['message']['content'].strip()
-            # Take only the first emoji if AI returned multiple characters
-            category_icon = suggested_icon[:2] if suggested_icon else '📦'
-        except Exception as e:
-            print(f"Error suggesting icon with AI: {e}")
-            category_icon = '📦'  # Fallback to default icon
+        category_icon = '📦'  # Default icon
 
     conn = get_db()
     cursor = conn.cursor()
