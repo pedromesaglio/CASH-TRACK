@@ -12,6 +12,8 @@ import requests
 # Use direct API call instead of SDK to avoid version compatibility issues
 def call_openai_api(messages, model="gpt-4o-mini", temperature=0.1, max_tokens=5000):
     """Call OpenAI API directly using requests - avoids SDK version issues"""
+    import time
+
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set")
@@ -28,15 +30,26 @@ def call_openai_api(messages, model="gpt-4o-mini", temperature=0.1, max_tokens=5
         "max_tokens": max_tokens
     }
 
-    response = requests.post(
-        "https://api.openai.com/v1/chat/completions",
-        headers=headers,
-        json=data,
-        timeout=60
-    )
-
-    response.raise_for_status()
-    return response.json()
+    # Retry with exponential backoff for rate limits (free tier friendly)
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=data,
+                timeout=60
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429 and attempt < max_retries - 1:
+                # Rate limit - wait and retry
+                wait_time = 3 * (attempt + 1)  # 3s, 6s
+                print(f"⏳ Rate limit alcanzado, esperando {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                raise
 
 
 def extract_text_from_pdf(filepath):
@@ -373,7 +386,7 @@ def parse_transactions_with_regex(transactions_text):
     return expenses
 
 
-def process_pdf_expenses(filepath, user_id, chunk_size=10):
+def process_pdf_expenses(filepath, user_id, chunk_size=30):
     """
     Main function to process PDF and extract expenses
     Yields progress updates as dictionaries
