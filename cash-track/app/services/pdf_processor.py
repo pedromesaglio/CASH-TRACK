@@ -124,6 +124,12 @@ def parse_transactions_with_openai(transactions_text):
     Returns list of expense dictionaries
     """
     try:
+        # DEBUG: Log the text being sent to OpenAI
+        print("=" * 80)
+        print("TEXTO ENVIADO A OPENAI:")
+        print(transactions_text)
+        print("=" * 80)
+
         prompt = f"""Sos un experto en análisis de resúmenes de tarjetas de crédito de CUALQUIER banco argentino e internacional.
 
 Analizá CADA transacción de consumo en este texto y devolvé ÚNICAMENTE un JSON array.
@@ -186,6 +192,12 @@ Devolvé SOLO el JSON array sin texto adicional:
         )
 
         ai_response = response.choices[0].message.content.strip()
+
+        # DEBUG: Log OpenAI response
+        print("=" * 80)
+        print("RESPUESTA DE OPENAI:")
+        print(ai_response)
+        print("=" * 80)
 
         # Remove markdown code blocks
         ai_response = re.sub(r'```json\s*', '', ai_response)
