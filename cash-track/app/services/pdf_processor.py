@@ -1,10 +1,10 @@
 """
 PDF processing service for extracting expenses from credit card statements
+Uses regex-based parsing - no AI/Ollama needed!
 """
 import pdfplumber
 import re
 import json
-import ollama
 from datetime import datetime
 
 
@@ -107,116 +107,132 @@ def extract_consumption_lines(text, cardholder_name):
     return consumption_lines
 
 
-def parse_transactions_with_ai(transactions_text):
+def parse_transactions_with_regex(transactions_text):
     """
-    Parse transactions using Ollama AI
+    Parse transactions using regex patterns (no AI needed - works everywhere!)
     Returns list of expense dictionaries
+
+    Format: DD-MMM-YY DESCRIPTION [C.XX/YY] [USD AMOUNT] COUPON_NUMBER FINAL_AMOUNT
     """
-    prompt = f"""Sos un experto en análisis de resúmenes de tarjetas de crédito BBVA Argentina.
+    expenses = []
+    lines = transactions_text.strip().split('\n')
 
-Analizá CADA LÍNEA del siguiente listado de transacciones y devolvé ÚNICAMENTE un JSON array.
+    for line in lines:
+        if not line.strip():
+            continue
 
-Transacciones:
-{transactions_text}
+        try:
+            # Extract date (DD-MMM-YY)
+            date_match = re.match(r'(\d{2})-([A-Za-z]{3})-(\d{2})', line)
+            if not date_match:
+                continue
 
-Formato de cada línea:
-FECHA DESCRIPCIÓN [C.XX/YY si tiene cuotas] [USD MONTO_USD] NRO_CUPON MONTO_PESOS [DÓLARES si es USD]
+            day = date_match.group(1)
+            month_abbr = date_match.group(2)
+            year = date_match.group(3)
 
-Para CADA transacción extraé:
-- fecha: YYYY-MM-DD (año 2026 si dice "26", 2025 si dice "25", 2024 si dice "24")
-- description: comercio/descripción (limpio, sin números de cupón ni códigos)
-- amount: monto NUMÉRICO
-  * Si el monto tiene formato "1.234,56" convertilo a 1234.56
-  * Si es negativo (descuento/bonificación) devolvelo como positivo
-  * NUNCA uses comas ni puntos como separadores de miles, solo punto decimal
-  * Ejemplos: "4.334,38" → 4334.38, "35.000,00" → 35000.00, "555,27" → 555.27
-- currency: Detectar moneda siguiendo estas reglas ESTRICTAS:
-  * Si aparece "USD" seguido de un número (ej: "USD 4,48" o "USD 555,27") → "USD" y usar ese monto
-  * Si NO aparece "USD" → "ARS" y usar el último número de la línea
-  * Monedas alternativas: "UYU" (pesos uruguayos) → convertir a "ARS" aproximado
-- installment_number: Extraer cuota ACTUAL de "C.XX/YY"
-  * "C.01/06" → "1/6" (primera cuota de 6)
-  * "C.03/03" → "3/3" (tercera cuota de 3)
-  * "C.06/06" → "6/6" (última cuota de 6)
-  * Si NO tiene "C.XX/YY" → null
-- category: Alimentación, Transporte, Salud, Entretenimiento, Servicios, Educación, Ropa, Otros
-- payment_method: "Tarjeta de Crédito"
-
-EJEMPLOS:
-1. "10-Feb-26 CAFETERIA DEL PUERTO USD 4,48 690556 4,48"
-   → {{"date":"2026-02-10","description":"CAFETERIA DEL PUERTO","amount":4.48,"currency":"USD","installment_number":null}}
-
-2. "29-Ago-25 SIETE CUMBRES C.06/06 234817 18.166,66"
-   → {{"date":"2025-08-29","description":"SIETE CUMBRES","amount":18166.66,"currency":"ARS","installment_number":"6/6"}}
-
-3. "13-Feb-26 MERPAGO*LAPLANCHETTA C.01/06 324080 9.400,00"
-   → {{"date":"2026-02-13","description":"MERPAGO*LAPLANCHETTA","amount":9400.00,"currency":"ARS","installment_number":"1/6"}}
-
-4. "05-Feb-26 AUTOPISTAS DEL S 960004413131001 000001 1.538,02"
-   → {{"date":"2026-02-05","description":"AUTOPISTAS DEL S","amount":1538.02,"currency":"ARS","installment_number":null}}
-
-Devolvé SOLO el JSON array sin texto adicional:
-[{{"date":"2026-02-10","description":"CAFETERIA DEL PUERTO","amount":4.48,"currency":"USD","category":"Alimentación","payment_method":"Tarjeta de Crédito","installment_number":null}}]
-"""
-
-    try:
-        response = ollama.chat(
-            model='mistral:7b',
-            messages=[
-                {'role': 'system', 'content': 'Devolvés SOLO JSON válido sin texto adicional.'},
-                {'role': 'user', 'content': prompt}
-            ],
-            options={
-                'num_predict': 5000,
-                'temperature': 0.1
+            # Convert month abbreviation to number
+            months = {
+                'Ene': '01', 'Feb': '02', 'Mar': '03', 'Abr': '04',
+                'May': '05', 'Jun': '06', 'Jul': '07', 'Ago': '08',
+                'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dic': '12',
+                'Jan': '01', 'Apr': '04', 'Aug': '08', 'Dec': '12'  # English variants
             }
-        )
+            month = months.get(month_abbr, '01')
+            full_year = f"20{year}"
+            date_str = f"{full_year}-{month}-{day}"
 
-        ai_response = response['message']['content'].strip()
-        ai_response = re.sub(r'```json\s*', '', ai_response)
-        ai_response = re.sub(r'```\s*', '', ai_response)
-        ai_response = ai_response.strip()
+            # Remove the date from the line for easier parsing
+            line_without_date = line[date_match.end():].strip()
 
-        expenses = json.loads(ai_response)
+            # Extract installment number (C.XX/YY)
+            installment_number = None
+            installment_match = re.search(r'C\.(\d{2})/(\d{2})', line_without_date)
+            if installment_match:
+                current = installment_match.group(1).lstrip('0') or '0'
+                total = installment_match.group(2).lstrip('0') or '0'
+                installment_number = f"{current}/{total}"
+                line_without_date = line_without_date[:installment_match.start()] + line_without_date[installment_match.end():]
 
-        # Validate and normalize expenses
-        valid_expenses = []
-        for expense in expenses:
-            required_keys = ['date', 'description', 'amount', 'category', 'payment_method', 'currency']
-            if all(key in expense for key in required_keys):
-                # Convert amount to float, handling both formats
-                amount_str = str(expense['amount'])
-                # Remove currency symbols and whitespace
-                amount_str = amount_str.replace('$', '').replace('ARS', '').replace('USD', '').strip()
-                # Handle Argentine format (1.234,56) and US format (1234.56)
-                if ',' in amount_str and '.' in amount_str:
-                    # Argentine format: 1.234,56 -> remove dots, replace comma with dot
-                    amount_str = amount_str.replace('.', '').replace(',', '.')
-                elif ',' in amount_str:
-                    # Only comma: could be decimal separator
-                    amount_str = amount_str.replace(',', '.')
+            # Detect currency and extract amount
+            currency = "ARS"
+            amount = 0.0
 
-                try:
-                    expense['amount'] = abs(float(amount_str))  # Use abs to handle negative amounts
-                    expense['currency'] = expense['currency'].upper()
-                    if 'installment_number' not in expense:
-                        expense['installment_number'] = None
-                    valid_expenses.append(expense)
-                except ValueError as e:
-                    print(f"Error converting amount '{expense['amount']}' for expense: {expense.get('description', 'unknown')}: {e}")
-                    continue
+            # Check for USD
+            usd_match = re.search(r'USD\s+([\d.,]+)', line_without_date)
+            if usd_match:
+                currency = "USD"
+                amount_str = usd_match.group(1)
+            else:
+                # Check for UYU (Uruguayan pesos)
+                uyu_match = re.search(r'UYU\s+([\d.,]+)', line_without_date)
+                if uyu_match:
+                    currency = "ARS"  # Convert to ARS for consistency
+                    amount_str = uyu_match.group(1)
+                    # UYU to ARS rough conversion (1 UYU ≈ 25 ARS)
+                    amount_str = str(float(amount_str.replace('.', '').replace(',', '.')) * 25)
+                else:
+                    # ARS - get last number in the line
+                    amounts = re.findall(r'([\d.]+,\d{2})', line_without_date)
+                    if amounts:
+                        amount_str = amounts[-1]
+                    else:
+                        continue
 
-        return valid_expenses
+            # Convert amount string to float
+            amount_str = amount_str.replace('.', '').replace(',', '.')
+            amount = abs(float(amount_str))
 
-    except json.JSONDecodeError as e:
-        print(f"❌ JSON Error: {e}")
-        print(f"AI Response was: {ai_response[:500]}")
-        return []
-    except Exception as e:
-        print(f"❌ Error processing with AI: {e}")
-        import traceback
-        traceback.print_exc()
-        return []
+            # Extract description (everything between date and numbers/codes)
+            # Remove coupon numbers (6-digit numbers)
+            desc_line = re.sub(r'\b\d{6,}\b', '', line_without_date)
+            # Remove installment info if present
+            desc_line = re.sub(r'C\.\d{2}/\d{2}', '', desc_line)
+            # Remove USD/UYU and amounts
+            desc_line = re.sub(r'(USD|UYU)\s*[\d.,]+', '', desc_line)
+            desc_line = re.sub(r'[\d.]+,\d{2}', '', desc_line)
+            # Clean up
+            description = ' '.join(desc_line.split()).strip()
+
+            if not description:
+                description = "Consumo"
+
+            # Categorize based on keywords
+            description_lower = description.lower()
+            if any(keyword in description_lower for keyword in ['autopista', 'peaje', 'nafta', 'ypf', 'shell', 'axion']):
+                category = "Transporte"
+            elif any(keyword in description_lower for keyword in ['carrefour', 'super', 'mercado', 'devoto', 'dia']):
+                category = "Alimentación"
+            elif any(keyword in description_lower for keyword in ['hospital', 'farmacia', 'medic', 'salud', 'doctor']):
+                category = "Salud"
+            elif any(keyword in description_lower for keyword in ['cine', 'teatro', 'show', 'netflix', 'spotify']):
+                category = "Entretenimiento"
+            elif any(keyword in description_lower for keyword in ['sancor', 'seguro', 'galeno', 'osde']):
+                category = "Servicios"
+            elif any(keyword in description_lower for keyword in ['easy', 'sinteplast', 'pintureria', 'ferreteria']):
+                category = "Otros"
+            elif any(keyword in description_lower for keyword in ['merpago', 'mercado']):
+                category = "Otros"
+            else:
+                category = "Otros"
+
+            expense = {
+                'date': date_str,
+                'description': description,
+                'amount': amount,
+                'currency': currency,
+                'installment_number': installment_number,
+                'category': category,
+                'payment_method': 'Tarjeta de Crédito'
+            }
+
+            expenses.append(expense)
+
+        except Exception as e:
+            print(f"Error parsing line '{line}': {e}")
+            continue
+
+    return expenses
 
 
 def process_pdf_expenses(filepath, user_id, chunk_size=10):
@@ -256,7 +272,7 @@ def process_pdf_expenses(filepath, user_id, chunk_size=10):
             yield {'progress': progress, 'message': f'Procesando grupo {current_chunk} de {total_chunks}...'}
 
             transactions_text = '\n'.join(chunk)
-            chunk_expenses = parse_transactions_with_ai(transactions_text)
+            chunk_expenses = parse_transactions_with_regex(transactions_text)
             all_expenses.extend(chunk_expenses)
 
         # Step 4: Insert into database
