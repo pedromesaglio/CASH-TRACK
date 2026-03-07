@@ -76,11 +76,12 @@ def extract_consumption_lines(text, cardholder_name):
     in_consumption_section = False
 
     for line in lines:
-        # Start section ONLY if it matches the cardholder's name
+        # Start section if it contains "Consumos" and at least part of the cardholder's name
         if 'Consumos' in line and cardholder_name:
-            # Check if line contains the cardholder's name (words in any order)
+            # Split name into parts (e.g., "MESAGLIO CLARA" -> ["MESAGLIO", "CLARA"])
             name_words = cardholder_name.split()
-            if all(word.lower() in line.lower() for word in name_words):
+            # Check if line contains at least the first or last name
+            if any(word.lower() in line.lower() for word in name_words):
                 in_consumption_section = True
                 continue
 
@@ -89,10 +90,13 @@ def extract_consumption_lines(text, cardholder_name):
             in_consumption_section = False
             continue
 
-        # Capture transaction lines
+        # Capture transaction lines (excluding BONIF discounts which are already included)
         if in_consumption_section and line.strip():
-            if re.match(r'^\d{2}-[A-Za-z]{3}-\d{2}', line) and 'BONIF' not in line:
-                consumption_lines.append(line.strip())
+            # Match lines starting with date pattern, but skip standalone BONIF lines
+            if re.match(r'^\d{2}-[A-Za-z]{3}-\d{2}', line):
+                # Skip if it's only a bonification line (those are already included in the main transaction)
+                if not line.startswith('BONIF'):
+                    consumption_lines.append(line.strip())
 
     return consumption_lines
 
