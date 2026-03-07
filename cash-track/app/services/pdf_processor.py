@@ -36,28 +36,34 @@ def extract_closing_date_and_cardholder(text):
                 cardholder_name = potential_name
                 break
 
-    # Extract closing date
-    for line in text.split('\n'):
+    # Extract closing date - look for the actual date value after "CIERRE ACTUAL"
+    for idx, line in enumerate(text.split('\n')):
         # Look for "CIERRE ACTUAL" line
         if 'CIERRE ACTUAL' in line:
-            # Try to find a date in format DD-MMM-YY
-            match = re.search(r'(\d{2})-([A-Za-z]{3})-(\d{2})', line)
-            if match:
-                day = match.group(1)
-                month_abbr = match.group(2)
-                year = match.group(3)
+            # The date is usually in the next line or same line
+            # Format: 26-Feb-26
+            lines_to_check = [line] + text.split('\n')[idx+1:idx+3]
+            for check_line in lines_to_check:
+                match = re.search(r'(\d{2})-([A-Za-z]{3})-(\d{2})', check_line)
+                if match:
+                    day = match.group(1)
+                    month_abbr = match.group(2)
+                    year = match.group(3)
 
-                # Convert Spanish month abbreviation to number
-                months = {
-                    'Ene': '01', 'Feb': '02', 'Mar': '03', 'Abr': '04',
-                    'May': '05', 'Jun': '06', 'Jul': '07', 'Ago': '08',
-                    'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dic': '12'
-                }
-                month = months.get(month_abbr, '01')
+                    # Convert Spanish month abbreviation to number
+                    months = {
+                        'Ene': '01', 'Feb': '02', 'Mar': '03', 'Abr': '04',
+                        'May': '05', 'Jun': '06', 'Jul': '07', 'Ago': '08',
+                        'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dic': '12'
+                    }
+                    month = months.get(month_abbr, '01')
 
-                # Assume 20XX for year
-                full_year = f"20{year}"
-                closing_date = f"{full_year}-{month}-{day}"
+                    # Assume 20XX for year
+                    full_year = f"20{year}"
+                    closing_date = f"{full_year}-{month}-{day}"
+                    break
+
+            if closing_date:
                 break
 
     # If no closing date found, use today
