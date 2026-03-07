@@ -7,26 +7,36 @@ import re
 import json
 from datetime import datetime
 import os
-from openai import OpenAI
+import requests
 
-# Initialize OpenAI client (lazy initialization to avoid issues)
-def get_openai_client():
-    """Get or create OpenAI client - compatible with both old and new versions"""
+# Use direct API call instead of SDK to avoid version compatibility issues
+def call_openai_api(messages, model="gpt-4o-mini", temperature=0.1, max_tokens=5000):
+    """Call OpenAI API directly using requests - avoids SDK version issues"""
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set")
 
-    # Try new version first (without proxies parameter)
-    try:
-        return OpenAI(api_key=api_key)
-    except TypeError as e:
-        # If it fails due to proxies parameter, try old version
-        if 'proxies' in str(e):
-            # Old version compatibility - explicitly pass None for proxies
-            import inspect
-            if 'proxies' in inspect.signature(OpenAI.__init__).parameters:
-                return OpenAI(api_key=api_key, proxies=None)
-        raise
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    data = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens
+    }
+
+    response = requests.post(
+        "https://api.openai.com/v1/chat/completions",
+        headers=headers,
+        json=data,
+        timeout=60
+    )
+
+    response.raise_for_status()
+    return response.json()
 
 
 def extract_text_from_pdf(filepath):
@@ -191,18 +201,17 @@ IMPORTANTE:
 Devolvé SOLO el JSON array sin texto adicional:
 [{{"date":"2025-12-04","description":"SUPERMERCADO CARREFOUR","amount":4334.38,"currency":"ARS","category":"Alimentación","payment_method":"Tarjeta de Crédito","installment_number":null}}]"""
 
-        client = get_openai_client()
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
+        response = call_openai_api(
             messages=[
                 {"role": "system", "content": "Sos un experto extrayendo transacciones de resúmenes de tarjetas. Devolvés SOLO JSON válido, nada más."},
                 {"role": "user", "content": prompt}
             ],
+            model="gpt-4o-mini",
             temperature=0.1,
             max_tokens=5000
         )
 
-        ai_response = response.choices[0].message.content.strip()
+        ai_response = response['choices'][0]['message']['content'].strip()
 
         # DEBUG: Log OpenAI response
         print("=" * 80)

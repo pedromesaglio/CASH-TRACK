@@ -3,15 +3,36 @@ from datetime import datetime
 from database import get_db
 from functools import wraps
 import os
-from openai import OpenAI
+import requests
 
-# Initialize OpenAI client (lazy initialization)
-def get_openai_client():
-    """Get or create OpenAI client"""
+# Call OpenAI API directly using requests - avoids SDK version issues
+def call_openai_api(messages, model="gpt-4o-mini", temperature=0.7, max_tokens=1000):
+    """Call OpenAI API directly using requests"""
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set")
-    return OpenAI(api_key=api_key)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    data = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens
+    }
+
+    response = requests.post(
+        "https://api.openai.com/v1/chat/completions",
+        headers=headers,
+        json=data,
+        timeout=60
+    )
+
+    response.raise_for_status()
+    return response.json()
 
 # Create blueprint
 ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
@@ -93,18 +114,17 @@ Tus gastos por categoría:
             context += f"- {exp['date']}: {exp['description']} (${exp['amount']:,.2f}) - {exp['category']}\n"
 
         # Call OpenAI API
-        client = get_openai_client()
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
+        response = call_openai_api(
             messages=[
                 {"role": "system", "content": context},
                 {"role": "user", "content": user_message}
             ],
+            model="gpt-4o-mini",
             temperature=0.7,
             max_tokens=1000
         )
 
-        ai_response = response.choices[0].message.content
+        ai_response = response['choices'][0]['message']['content']
 
         return jsonify({
             'response': ai_response,
